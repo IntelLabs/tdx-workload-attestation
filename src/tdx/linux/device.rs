@@ -34,26 +34,25 @@ impl TdxDeviceKvmV15 {
     }
 
     pub fn is_available() -> Result<bool> {
-	let path = Path::new(TDX15_DEV_PATH);
-        let available =
-            path.exists().map_err(|e| Error::NotSupported(format!("{}", e)))?;
+        let path = Path::new(TDX15_DEV_PATH);
+        let available = fs::exists(path).map_err(|e| Error::NotSupported(format!("{}", e)))?;
 
-	if available {
-	    // throw an error if this is a symlink
+        if available {
+            // throw an error if this is a symlink
             if path.is_symlink() {
                 return Err(Error::NotSupported(format!(
                     "Path {} is a symlink",
                     path.display()
                 )));
             }
-	}
+        }
 
         Ok(available)
     }
 
     pub fn get_tdreport_raw(&self, &req: &[u8; 1088]) -> Result<[u8; 1088]> {
-	assert!(TdxDeviceKvmV15.is_available().expect("Intel TDX KVM device node supported"));
-	
+        assert!(TdxDeviceKvmV15::is_available().expect("Intel TDX KVM device node supported"));
+
         // 1. Get device file descriptor: must open in RW mode
         let tdx_dev = fs::File::options()
             .read(true)
