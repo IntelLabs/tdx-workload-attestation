@@ -2,7 +2,7 @@ use crate::host::TeeHost;
 use crate::gcp::endorsement;
 use crate::tdx::TDX_MR_REG_LEN;
 use crate::error::{Error, Result};
-use crate::signing;
+use crate::verification;
 
 use protobuf::Message;
 
@@ -46,21 +46,21 @@ impl GcpTdxHost {
     fn verify_launch_endorsement_signing_cert(
         golden: &endorsement::VMGoldenMeasurement,
     ) -> Result<bool> {
-        let gcp_root_cert = signing::utils::load_x509_der("GCE-cc-tcb-root_1.crt")?;
-        let signing_cert = signing::utils::x509_from_der_bytes(&golden.cert)?;
+        let gcp_root_cert = verification::utils::load_x509_der("GCE-cc-tcb-root_1.crt")?;
+        let signing_cert = verification::utils::x509_from_der_bytes(&golden.cert)?;
 
-        signing::verify_x509_cert(&signing_cert, &gcp_root_cert)
+        verification::verify_x509_cert(&signing_cert, &gcp_root_cert)
     }
 
     fn verify_launch_endorsement_sig(
         endorsement: &endorsement::VMLaunchEndorsement,
         signing_cert: Vec<u8>,
     ) -> Result<bool> {
-        let cert_x509 = signing::utils::x509_from_der_bytes(&signing_cert)?;
+        let cert_x509 = verification::utils::x509_from_der_bytes(&signing_cert)?;
 
-        let signing_key = signing::utils::get_x509_pubkey(&cert_x509)?;
+        let signing_key = verification::utils::get_x509_pubkey(&cert_x509)?;
 
-        signing::verify_signature_sha256_rsa_pss(
+        verification::verify_signature_sha256_rsa_pss(
             &endorsement.serialized_uefi_golden,
             &endorsement.signature,
             &signing_key,

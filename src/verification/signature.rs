@@ -1,8 +1,11 @@
 use crate::error::{Error, Result};
+use openssl::hash::MessageDigest;
+use openssl::pkey::{PKey, Public};
 #[cfg(feature = "host-gcp-tdx")]
 use openssl::rsa::Padding;
 #[cfg(feature = "host-gcp-tdx")]
 use openssl::sign::RsaPssSaltlen;
+use openssl::sign::Verifier;
 use openssl::x509::{X509VerifyResult, X509};
 
 #[cfg(feature = "host-gcp-tdx")]
@@ -27,7 +30,7 @@ pub fn verify_signature_sha256_rsa_pss(
 
     // Create verifier with error handling
     let mut verifier =
-        openssl::sign::Verifier::new(openssl::hash::MessageDigest::sha256(), public_key)
+        Verifier::new(MessageDigest::sha256(), public_key)
             .map_err(|e| Error::SignatureError(format!("Failed to create verifier: {}", e)))?;
 
     // Set RSA-PSS parameters with error handling
