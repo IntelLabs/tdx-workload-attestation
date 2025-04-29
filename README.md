@@ -1,4 +1,4 @@
-# il-opensource-template
+# TDX Workload Attestation
 ![GitHub License](https://img.shields.io/github/license/IntelLabs/il-opensource-template)
 [![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/IntelLabs/il-opensource-template/badge)](https://scorecard.dev/viewer/?uri=github.com/IntelLabs/il-opensource-template)
 <!-- UNCOMMENT AS NEEDED
@@ -6,3 +6,59 @@
 [![pytorch](https://img.shields.io/badge/PyTorch-v2.4.1-green?logo=pytorch)](https://pytorch.org/get-started/locally/)
 ![python-support](https://img.shields.io/badge/Python-3.12-3?logo=python)
 -->
+
+A Rust library for attesting virtual machine (VM) workloads using [Intel Trust
+Domain Extensions] (Intel TDX).
+
+## Quickstart
+
+This guided assumes you are running within an [elightened Ubuntu] VM on an Intel
+TDX-capable machine.
+
+### Pre-requisites
+
+- Rust toolchain (1.85 or later) (see https://www.rust-lang.org/tools/install)
+- OpenSSL development libraries
+- A compute platform with support for Intel TDX 1.5 or above.
+
+### Supported Environments
+
+- VM guests: [enlightened Ubuntu] 24.04 LTS or later
+- Hosts: Google Cloud Platform (GCP)
+
+### Build tdx-workload-attestation
+
+For a default build within an Ubuntu TDX guest, run:
+```bash
+cargo build
+```
+
+To enable support for GCP host verification, build with:
+```bash
+cargo build --features host-gcp-tdx
+```
+The necessary root certificates are downloaded during this build.
+
+Use the `--examples` flag to build the examples.
+
+### Run the examples
+
+Print the VM's current Intel TDX attestation report:
+```bash
+sudo ./target/debug/examples/report
+```
+
+Verify the GCP host's launch endorsement for the VM (`host-gcp-tdx` feature
+only):
+```bash
+sudo ./target/debug/examples/gcp
+```
+
+## Disclaimer
+
+This library is experimental, and should not be used in a production environment.
+
+[Intel Trust Domain Extensions]: https://www.intel.com/content/www/us/en/developer/tools/trust-domain-extensions/overview.html
+[enlightened Ubuntu]: https://github.com/canonical/tdx
+
+
