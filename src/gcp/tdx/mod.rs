@@ -9,6 +9,8 @@ use protobuf::Message;
 use std::fs;
 use std::process::Command;
 
+const GCE_TCB_ROOT_CERT_PATH: &str = "target/gcp/GCE-cc-tcb-root_1.crt";
+
 pub struct GcpTdxHost {
     mrtd: [u8; TDX_MR_REG_LEN],
 }
@@ -26,7 +28,7 @@ impl GcpTdxHost {
 
         // Insert the MRTD as hex-encoded string into the URL to retrieve the endorsement
         let storage_url = format!(
-            "gs://gce_tcb_integrity/ovmf_x64_csm/tdx/{}.binarypb",
+	    "gs://gce_tcb_integrity/ovmf_x64_csm/tdx/{}.binarypb",
             hex::encode(self.mrtd)
         );
 
@@ -38,7 +40,7 @@ impl GcpTdxHost {
             .expect("failed to retrieve GCP launch endorsement");
 
         let endorsement = endorsement::VMLaunchEndorsement::parse_from_bytes(&output.stdout)
-            .map_err(|e| Error::Serialization(e.to_string()))?;
+            .map_err(|e| Error::SerializationError(e.to_string()))?;
 
         Ok(endorsement)
     }
@@ -46,10 +48,10 @@ impl GcpTdxHost {
     fn verify_launch_endorsement_signing_cert(
         golden: &endorsement::VMGoldenMeasurement,
     ) -> Result<bool> {
-        let gcp_root_cert = verification::utils::load_x509_der("GCE-cc-tcb-root_1.crt")?;
+        let gcp_root_cert = verification::utils::load_x509_der(GCE_TCB_ROOT_CERT_PATH)?;
         let signing_cert = verification::utils::x509_from_der_bytes(&golden.cert)?;
 
-        verification::verify_x509_cert(&signing_cert, &gcp_root_cert)
+        verification::signature::verify_x509_cert(&signing_cert, &gcp_root_cert)
     }
 
     fn verify_launch_endorsement_sig(
@@ -60,7 +62,7 @@ impl GcpTdxHost {
 
         let signing_key = verification::utils::get_x509_pubkey(&cert_x509)?;
 
-        verification::verify_signature_sha256_rsa_pss(
+        verification::signature::verify_signature_sha256_rsa_pss(
             &endorsement.serialized_uefi_golden,
             &endorsement.signature,
             &signing_key,

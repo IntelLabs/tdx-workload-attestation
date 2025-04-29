@@ -1,7 +1,10 @@
 use thiserror::Error;
 
-#[derive(Error, Debug)]
+#[derive(Debug, Error)]
 pub enum Error {
+    #[error("IO error: {0}")]
+    IoError(#[from] std::io::Error),
+    
     #[error("Not supported: {0}")]
     NotSupported(String),
 
@@ -16,6 +19,9 @@ pub enum Error {
 
     #[error("Signature error: {0}")]
     SignatureError(String),
+
+    #[error("Verification error: {0}")]
+    VerificationError(String),
 }
 
 pub type Result<T> = std::result::Result<T, Error>;

@@ -1,9 +1,12 @@
 pub mod error;
 #[cfg(feature = "host-gcp-tdx")]
 pub mod host;
+#[cfg(feature = "host-gcp-tdx")]
+pub mod gcp;
 pub mod provider;
 #[cfg(feature = "tdx-linux")]
 pub mod tdx;
+pub mod verification;
 
 use error::{Error, Result};
 #[cfg(feature = "host-gcp-tdx")]
@@ -12,7 +15,7 @@ use provider::AttestationProvider;
 #[cfg(feature = "tdx-linux")]
 use tdx::LinuxTdxProvider;
 #[cfg(feature = "host-gcp-tdx")]
-use tdx::gcp::GcpTdxHost;
+use gcp::tdx::GcpTdxHost;
 #[cfg(feature = "tdx-linux")]
 use tdx::linux::is_v15_kvm_device;
 

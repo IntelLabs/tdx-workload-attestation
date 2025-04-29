@@ -1,4 +1,6 @@
 use crate::error::{Error, Result};
+use crate::verification::utils;
+
 use openssl::hash::MessageDigest;
 use openssl::pkey::{PKey, Public};
 #[cfg(feature = "host-gcp-tdx")]
@@ -60,7 +62,7 @@ pub fn verify_x509_cert(cert: &X509, issuer_cert: &X509) -> Result<bool> {
     match issuer_cert.issued(&cert) {
         X509VerifyResult::OK => {} // valid issuer so pass through
         _ => {
-            return Err(Error::Verification(
+            return Err(Error::VerificationError(
                 "Cert issuer verification failed".to_string(),
             ))
         }
