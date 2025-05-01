@@ -19,7 +19,7 @@ fn generate_gcp_protos() {
 #[cfg(feature = "host-gcp-tdx")]
 fn setup_gcp_guest() {
     let _output = Command::new("scripts/gcp-endorsement-setup.sh")
-	.output()
+        .output()
         .expect("failed to set up GCP guest");
 
     generate_gcp_protos();

@@ -8,7 +8,7 @@ use openssl::rsa::Padding;
 #[cfg(feature = "host-gcp-tdx")]
 use openssl::sign::RsaPssSaltlen;
 use openssl::sign::Verifier;
-use openssl::x509::{X509VerifyResult, X509};
+use openssl::x509::{X509, X509VerifyResult};
 
 #[cfg(feature = "host-gcp-tdx")]
 // GCP uses a SHA256 with RSA PSS padding signature scheme, so this is needed to
@@ -31,9 +31,8 @@ pub fn verify_signature_sha256_rsa_pss(
     }
 
     // Create verifier with error handling
-    let mut verifier =
-        Verifier::new(MessageDigest::sha256(), public_key)
-            .map_err(|e| Error::SignatureError(format!("Failed to create verifier: {}", e)))?;
+    let mut verifier = Verifier::new(MessageDigest::sha256(), public_key)
+        .map_err(|e| Error::SignatureError(format!("Failed to create verifier: {}", e)))?;
 
     // Set RSA-PSS parameters with error handling
     verifier
@@ -47,9 +46,9 @@ pub fn verify_signature_sha256_rsa_pss(
         .map_err(|e| Error::SignatureError(format!("Failed to set MGF1 hash: {}", e)))?;
 
     // Update with data
-    verifier
-        .update(data)
-        .map_err(|e| Error::SignatureError(format!("Failed to update verifier with data: {}", e)))?;
+    verifier.update(data).map_err(|e| {
+        Error::SignatureError(format!("Failed to update verifier with data: {}", e))
+    })?;
 
     // Verify signature
     verifier
@@ -64,7 +63,7 @@ pub fn verify_x509_cert(cert: &X509, issuer_cert: &X509) -> Result<bool> {
         _ => {
             return Err(Error::VerificationError(
                 "Cert issuer verification failed".to_string(),
-            ))
+            ));
         }
     };
 

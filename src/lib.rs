@@ -1,9 +1,9 @@
 pub mod error;
-pub mod provider;
 #[cfg(feature = "host-gcp-tdx")]
 pub mod gcp;
 #[cfg(feature = "host-gcp-tdx")]
 pub mod host;
+pub mod provider;
 #[cfg(feature = "tdx-linux")]
 pub mod tdx;
 #[cfg(feature = "host-verification")]
