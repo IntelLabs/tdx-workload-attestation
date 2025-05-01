@@ -6,7 +6,8 @@ use std::io::Read;
 use std::path::Path;
 
 pub fn get_x509_pubkey(cert: &X509) -> Result<PKey<Public>> {
-    cert.public_key().map_err(|e| Error::SignatureError(e.to_string()))
+    cert.public_key()
+        .map_err(|e| Error::SignatureError(e.to_string()))
 }
 
 pub fn x509_from_der_bytes(der_bytes: &[u8]) -> Result<X509> {
@@ -15,7 +16,7 @@ pub fn x509_from_der_bytes(der_bytes: &[u8]) -> Result<X509> {
 
 pub fn load_x509_der(cert_path: &str) -> Result<X509> {
     let path = Path::new(cert_path);
-    
+
     // throw an error if the cert is a symlink
     if path.exists() && path.is_symlink() {
         return Err(Error::NotSupported(format!(

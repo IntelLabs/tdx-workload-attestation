@@ -1,7 +1,7 @@
-use crate::host::TeeHost;
-use crate::gcp::endorsement;
-use crate::tdx::TDX_MR_REG_LEN;
 use crate::error::{Error, Result};
+use crate::gcp::endorsement;
+use crate::host::TeeHost;
+use crate::tdx::TDX_MR_REG_LEN;
 use crate::verification;
 
 use protobuf::Message;
@@ -28,7 +28,7 @@ impl GcpTdxHost {
 
         // Insert the MRTD as hex-encoded string into the URL to retrieve the endorsement
         let storage_url = format!(
-	    "gs://gce_tcb_integrity/ovmf_x64_csm/tdx/{}.binarypb",
+            "gs://gce_tcb_integrity/ovmf_x64_csm/tdx/{}.binarypb",
             hex::encode(self.mrtd)
         );
 

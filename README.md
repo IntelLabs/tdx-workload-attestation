@@ -12,14 +12,20 @@ Domain Extensions] (Intel TDX).
 
 ## Quickstart
 
-This guided assumes you are running within an [elightened Ubuntu] VM on an Intel
-TDX-capable machine.
+This guide assumes you are running within an [enlightened Ubuntu] VM on a
+machine with support for Intel TDX 1.5 or above.
 
 ### Pre-requisites
 
-- Rust toolchain (1.85 or later) (see https://www.rust-lang.org/tools/install)
-- OpenSSL development libraries
-- A compute platform with support for Intel TDX 1.5 or above.
+Install a Rust toolchain (1.85 or later) (see https://www.rust-lang.org/tools/install)
+```bash
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+```
+
+Then, install required libraries
+```bash
+sudo apt install libssl-dev protobuf-compiler
+```
 
 ### Supported Environments
 
