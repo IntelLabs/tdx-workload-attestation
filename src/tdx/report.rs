@@ -1,5 +1,25 @@
-// Provides TDX 1.5 TDREPORT structs
 // Rust implementation of https://github.com/canonical/tdx/blob/2cd1a182323bad17d80a2f491c63679ac6b73e7f/tests/lib/tdx-tools/src/tdxtools/tdreport.py
+
+//! # Intel TDX `TDREPORT` Structures
+//!
+//! This module provides data structures and utilities for working with TDX
+//! attestation reports, specifically the `TDREPORT` and its associated
+//! sub-fields. These structures are used to parse and manipulate the raw
+//! attestation data retrieved from a TDX device.
+//!
+//! The module currently only supports the TDX 1.5 report format.
+//!
+//! ## Overview
+//!
+//! The `TDREPORT` is a 1024-byte structure that contains various fields
+//! containing information about the TDX guest (i.e., the Trust Domain, or TD)
+//! as well as the CPU.
+//! Specifically, the `TDREPORT` consists of the `ReportMacStruct`,
+//! `TeeTcbInfo`, and `TdInfo`.
+//!
+//! # Notes
+//! - The module is currently designed to work specifically with Intel TDX 1.5 devices.
+//! - The `TDREPORT` structure and its substructures are based on the TDX 1.5 specification.
 
 use crate::tdx::{TDX_MR_REG_LEN, TDX_REPORT_DATA_LEN};
 
@@ -19,8 +39,10 @@ const TDREPORT_LEN: usize =
 // The length of a TDREPORT request
 const TDREPORT_REQ_LEN: usize = TDX_REPORT_DATA_LEN + TDREPORT_LEN;
 
-// All TDX attestation data structures should implement this
+/// A trait that defines a method for populating a structure from raw bytes.
+/// All TDX attestation-related data structures should implement this trait.
 trait BinaryBlob {
+    /// Populates the structure from a slice of raw bytes.
     fn from_bytes(&mut self, raw_bytes: &[u8]);
 }
 
@@ -259,6 +281,8 @@ impl BinaryBlob for TdInfo {
     }
 }
 
+/// Represents the full `TDREPORT` structure, which includes the internal
+/// `ReportMacStruct`, `TeeTcbInfo`, `TdInfo` structs and reserved fields.
 #[derive(Copy, Clone, Debug, Serialize, Deserialize)]
 pub struct TdReportV15 {
     //
@@ -276,6 +300,7 @@ pub struct TdReportV15 {
 }
 
 impl BinaryBlob for TdReportV15 {
+    /// Populates the `TdReportV15` structure from a slice of raw bytes.
     fn from_bytes(&mut self, raw_bytes: &[u8]) {
         assert!(raw_bytes.len() == TDREPORT_REQ_LEN);
 
@@ -299,6 +324,7 @@ impl BinaryBlob for TdReportV15 {
 }
 
 impl TdReportV15 {
+    /// Creates a new `TdReportV15` instance with default values.
     pub fn create_request(report_data: &[u8; TDX_REPORT_DATA_LEN]) -> [u8; TDREPORT_REQ_LEN] {
         let mut req: [u8; TDREPORT_REQ_LEN] = [0; TDREPORT_REQ_LEN];
         for i in 0..TDX_REPORT_DATA_LEN {
@@ -309,6 +335,7 @@ impl TdReportV15 {
         req
     }
 
+    /// Creates a new `TdReportV15` instance from raw bytes.
     pub fn get_tdreport_from_bytes(raw_bytes: &[u8; TDREPORT_REQ_LEN]) -> TdReportV15 {
         let mut tdreport = TdReportV15 {
             report_mac_struct: ReportMacStruct::new(),
@@ -321,6 +348,8 @@ impl TdReportV15 {
         tdreport
     }
 
+    /// Returns the `MRTD` field from the TDX report, which is a 48-byte
+    /// SHA-3 hash of the TD memory and configuration.
     pub fn get_mrtd(&self) -> [u8; TDX_MR_REG_LEN] {
         self.td_info.mrtd
     }
