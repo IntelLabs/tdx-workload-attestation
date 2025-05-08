@@ -1,3 +1,27 @@
+//! # Attestation Signature Utilities
+//!
+//! This module provides utilities for working with digital signatures
+//! used in attestation verification.
+//! It currently supports verification of SHA256 signatures that use RSA-PSS
+//! padding.
+//!
+//! # Example Usage
+//!
+//! ```rust
+//! use signature::verify_signature_sha256_rsa_pss;
+//! use x509::{load_x509_der, get_x509_pubkey};
+//!
+//! // Load signing cert
+//! let cert = load_x509_der("/path/to/cert.der")?;
+//! let signing_key = verification::x509::get_x509_pubkey(&cert)?;
+//!
+//! // Verify the digital `signature` on `data` with the `public_key` found in the cert
+//! match verify_signature_sha256_rsa_pss(data, &signature, &public_key) {
+//!     Ok(true) => println!("Signature is valid."),
+//!     Err(e) => eprintln!("Signature verification failed: {}", e),
+//! }
+//! ```
+
 use crate::error::{Error, Result};
 use crate::verification::utils;
 
@@ -8,11 +32,20 @@ use openssl::rsa::Padding;
 #[cfg(feature = "host-gcp-tdx")]
 use openssl::sign::RsaPssSaltlen;
 use openssl::sign::Verifier;
-use openssl::x509::{X509, X509VerifyResult};
 
+/// Verifies a SHA256 signature using RSA-PSS padding.
+///
+/// # Errors
+///
+/// - `Error::SignatureError` if there are issues with the inputs, verifier setup, or configuration.
+/// - `Error::VerificationError` if the signature verification fails.
+///
+/// # Notes
+///
+/// This function is only available when the `host-gcp-tdx` feature is enabled
+/// because Google Cloud Platform uses a SHA256 with RSA PSS padding signature scheme,
+/// so this is needed to verify GCP-signed data
 #[cfg(feature = "host-gcp-tdx")]
-// GCP uses a SHA256 with RSA PSS padding signature scheme, so this is needed to
-// Verify GCP-signed data
 pub fn verify_signature_sha256_rsa_pss(
     data: &[u8],
     signature: &[u8],
@@ -54,22 +87,4 @@ pub fn verify_signature_sha256_rsa_pss(
     verifier
         .verify(signature)
         .map_err(|e| Error::VerificationError(format!("Signature verification failed: {}", e)))
-}
-
-pub fn verify_x509_cert(cert: &X509, issuer_cert: &X509) -> Result<bool> {
-    // First, check the issuer
-    match issuer_cert.issued(&cert) {
-        X509VerifyResult::OK => {} // valid issuer so pass through
-        _ => {
-            return Err(Error::VerificationError(
-                "Cert issuer verification failed".to_string(),
-            ));
-        }
-    };
-
-    // Then, check the signature
-    let issuer_pkey = utils::get_x509_pubkey(&issuer_cert)?;
-
-    cert.verify(&issuer_pkey)
-        .map_err(|e| Error::SignatureError(e.to_string()))
 }
