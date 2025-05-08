@@ -138,3 +138,47 @@ impl TdxDeviceKvmV15 {
         Ok(resp)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_is_available() -> Result<()> {
+        match TdxDeviceKvmV15::is_available() {
+            Ok(true) => {
+                println!("KVM TDX 1.5 device available");
+                Ok(())
+            }
+            Ok(false) => {
+                println!("Path was a broken symlink");
+                Ok(())
+            }
+            Err(e) => {
+                println!(
+                    "An error occurred trying to read the KVM TDX 1.5 device: {}",
+                    e
+                );
+                Ok(())
+            }
+        }
+    }
+
+    #[test]
+    fn test_get_tdreport_raw() -> Result<()> {
+        let device = TdxDeviceKvmV15::new();
+        let request: [u8; 1088] = [0; 1088];
+
+        match device.get_tdreport_raw(&request) {
+            Ok(report) => {
+                // Assert that the device didn't just return an empty report
+                assert!(report != [0; 1088]);
+                Ok(())
+            }
+            Err(e) => {
+                println!("An error occurred trying to quote the TD: {}", e);
+                Ok(())
+            }
+        }
+    }
+}
