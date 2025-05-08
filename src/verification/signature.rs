@@ -5,7 +5,7 @@
 //! It currently supports verification of SHA256 signatures that use RSA-PSS
 //! padding.
 //!
-//! # Example Usage
+//! ## Example Usage
 //!
 //! ```rust
 //! use signature::verify_signature_sha256_rsa_pss;
@@ -23,7 +23,6 @@
 //! ```
 
 use crate::error::{Error, Result};
-use crate::verification::utils;
 
 use openssl::hash::MessageDigest;
 use openssl::pkey::{PKey, Public};
@@ -37,14 +36,15 @@ use openssl::sign::Verifier;
 ///
 /// # Errors
 ///
-/// - `Error::SignatureError` if there are issues with the inputs, verifier setup, or configuration.
+/// - `Error::SignatureError` if there are issues with the inputs, verifier
+/// setup, or configuration.
 /// - `Error::VerificationError` if the signature verification fails.
 ///
 /// # Notes
 ///
 /// This function is only available when the `host-gcp-tdx` feature is enabled
-/// because Google Cloud Platform uses a SHA256 with RSA PSS padding signature scheme,
-/// so this is needed to verify GCP-signed data
+/// because Google Cloud Platform uses a SHA256 with RSA PSS padding signature
+/// scheme, so this is needed to verify GCP-signed data.
 #[cfg(feature = "host-gcp-tdx")]
 pub fn verify_signature_sha256_rsa_pss(
     data: &[u8],

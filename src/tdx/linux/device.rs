@@ -13,7 +13,7 @@
 //!
 //! ```rust
 //! use device::TdxDeviceKvm15;
-//! 
+//!
 //! // Create a new instance of TdxDeviceKvmV15
 //! let tdx_device = TdxDeviceKvmV15::new();
 //!

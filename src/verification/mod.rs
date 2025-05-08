@@ -4,7 +4,7 @@
 //! needed for Intel TDX-based attestation verification.
 //! It currently supports digital signature and X.509 certificate utilities.
 //!
-//! # Example Usage
+//! ## Example Usage
 //!
 //! ```rust
 //! use verification::x509::{load_x509_der, get_x509_pubkey};

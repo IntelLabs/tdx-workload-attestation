@@ -6,7 +6,7 @@
 //! from DER-encoded bytes, loading certificates from files, and verifying
 //! certificate signatures.
 //!
-//! # Example Usage
+//! ## Example Usage
 //!
 //! ```rust
 //! use x509::{load_x509_der, get_x509_pubkey, verify_x509_cert};
@@ -93,7 +93,8 @@ pub fn load_x509_der(cert_path: &str) -> Result<X509> {
 ///
 /// This function performs two checks to verify the validity of the certificate:
 /// 1. It checks whether the provided `issuer_cert` is the issuer of the `cert`.
-/// 2. It verifies the signature of the `cert` using the public key from the `issuer_cert`.
+/// 2. It verifies the signature of the `cert` using the public key from the
+/// `issuer_cert`.
 ///
 /// # Errors
 ///

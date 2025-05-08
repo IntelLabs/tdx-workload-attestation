@@ -1,3 +1,4 @@
 *.*~
 *Zone.Identifier
 target/
+src/gcp/endorsement.rs

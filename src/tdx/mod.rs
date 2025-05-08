@@ -1,4 +1,4 @@
-//! # Intel TDX Guest Attestation Interfaces
+//! # Intel TDX Guest Attestation Interface
 //!
 //! This module provides a library for interacting with Intel TDX (Trust Domain
 //! Extensions) platforms within an enlightened VM guest.
