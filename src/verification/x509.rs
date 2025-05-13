@@ -112,7 +112,7 @@ pub fn verify_x509_cert(cert: &X509, issuer_cert: &X509) -> Result<bool> {
     };
 
     // Then, check the signature
-    let issuer_pkey = utils::get_x509_pubkey(&issuer_cert)?;
+    let issuer_pkey = get_x509_pubkey(&issuer_cert)?;
 
     cert.verify(&issuer_pkey)
         .map_err(|e| Error::SignatureError(e.to_string()))
