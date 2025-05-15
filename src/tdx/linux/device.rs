@@ -194,7 +194,7 @@ mod tests {
                     println!("{}", e);
                     Ok(())
                 }
-		// Any other error type is unexpected
+                // Any other error type is unexpected
                 _ => Err(e),
             },
         }

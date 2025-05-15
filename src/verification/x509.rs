@@ -121,10 +121,10 @@ pub fn verify_x509_cert(cert: &X509, issuer_cert: &X509) -> Result<bool> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use openssl::hash::MessageDigest;
-    use openssl::rsa::Rsa;
     use openssl::asn1::Asn1Time;
-    use openssl::pkey::{PKeyRef, Public, Private};
+    use openssl::hash::MessageDigest;
+    use openssl::pkey::{PKeyRef, Private, Public};
+    use openssl::rsa::Rsa;
 
     struct TestCerts {
         root: X509,
@@ -132,44 +132,44 @@ mod tests {
     }
 
     fn make_cert(pubkey: &PKeyRef<Public>, sign_key: &PKeyRef<Private>) -> X509 {
-	let mut x509_name = openssl::x509::X509NameBuilder::new().unwrap();
-	x509_name.append_entry_by_text("C", "US").unwrap();
-	x509_name.append_entry_by_text("ST", "CA").unwrap();
-	x509_name
+        let mut x509_name = openssl::x509::X509NameBuilder::new().unwrap();
+        x509_name.append_entry_by_text("C", "US").unwrap();
+        x509_name.append_entry_by_text("ST", "CA").unwrap();
+        x509_name
             .append_entry_by_text("O", "Some organization")
             .unwrap();
-	x509_name
+        x509_name
             .append_entry_by_text("CN", "www.example.com")
             .unwrap();
-	let x509_name = x509_name.build();
-	
-	let now = Asn1Time::days_from_now(0).unwrap();
-	let end = Asn1Time::days_from_now(5).unwrap();
-	
-	let mut cert = openssl::x509::X509::builder().unwrap();
-	cert.set_subject_name(&x509_name).unwrap();
-	cert.set_issuer_name(&x509_name).unwrap();
-	cert.set_not_before(&now).unwrap();
-	cert.set_not_after(&end).unwrap();
-	
-	cert.set_pubkey(pubkey).unwrap();
-	cert.sign(sign_key, MessageDigest::sha256()).unwrap();
+        let x509_name = x509_name.build();
 
-	cert.build()
+        let now = Asn1Time::days_from_now(0).unwrap();
+        let end = Asn1Time::days_from_now(5).unwrap();
+
+        let mut cert = openssl::x509::X509::builder().unwrap();
+        cert.set_subject_name(&x509_name).unwrap();
+        cert.set_issuer_name(&x509_name).unwrap();
+        cert.set_not_before(&now).unwrap();
+        cert.set_not_after(&end).unwrap();
+
+        cert.set_pubkey(pubkey).unwrap();
+        cert.sign(sign_key, MessageDigest::sha256()).unwrap();
+
+        cert.build()
     }
 
     fn setup() -> TestCerts {
- 	let rsa = Rsa::generate(4096).unwrap();
-	let pkey = PKey::from_rsa(rsa).unwrap();
-	let privkey_der = &pkey.private_key_to_der().unwrap();
-	let privkey = &PKey::private_key_from_der(&privkey_der).unwrap();
-	let pubkey_der = &pkey.public_key_to_der().unwrap();
-	let pubkey = &PKey::public_key_from_der(&pubkey_der).unwrap();
+        let rsa = Rsa::generate(4096).unwrap();
+        let pkey = PKey::from_rsa(rsa).unwrap();
+        let privkey_der = &pkey.private_key_to_der().unwrap();
+        let privkey = &PKey::private_key_from_der(&privkey_der).unwrap();
+        let pubkey_der = &pkey.public_key_to_der().unwrap();
+        let pubkey = &PKey::public_key_from_der(&pubkey_der).unwrap();
 
-	let rsa2 = Rsa::generate(4096).unwrap();
-	let pkey2 = PKey::from_rsa(rsa2).unwrap();
-	let pubkey_der2 = &pkey2.public_key_to_der().unwrap();
-	let pubkey2 = &PKey::public_key_from_der(&pubkey_der2).unwrap();
+        let rsa2 = Rsa::generate(4096).unwrap();
+        let pkey2 = PKey::from_rsa(rsa2).unwrap();
+        let pubkey_der2 = &pkey2.public_key_to_der().unwrap();
+        let pubkey2 = &PKey::public_key_from_der(&pubkey_der2).unwrap();
 
         TestCerts {
             root: make_cert(&pubkey, &privkey),
@@ -185,18 +185,23 @@ mod tests {
                 // this will return an error if it fails
                 match x509_from_der_bytes(&der_bytes) {
                     Ok(_c) => Ok(()),
-		    // Any error type is unexpected
-		    Err(e) => Err(e),
+                    // Any error type is unexpected
+                    Err(e) => Err(e),
                 }
             }
-            _ => Err(Error::SerializationError("something went wrong serializing the test cert".to_string()))
+            _ => Err(Error::SerializationError(
+                "something went wrong serializing the test cert".to_string(),
+            )),
         }
     }
 
     #[test]
     fn test_verify_x509_cert() -> Result<()> {
         let test_certs = setup();
-        assert!(verify_x509_cert(&test_certs.interm, &test_certs.root).expect("certificate signature should be valid"));
-	Ok(())
+        assert!(
+            verify_x509_cert(&test_certs.interm, &test_certs.root)
+                .expect("certificate signature should be valid")
+        );
+        Ok(())
     }
 }
