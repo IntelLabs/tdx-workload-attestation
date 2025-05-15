@@ -128,7 +128,6 @@ mod tests {
     #[test]
     fn test_get_attestation_report() -> Result<()> {
         let provider = LinuxTdxProvider::new();
-
         match provider.get_attestation_report() {
             Ok(report) => {
                 // Verify it returned a non-empty string
@@ -149,7 +148,6 @@ mod tests {
     #[test]
     fn test_get_launch_measurement() -> Result<()> {
         let provider = LinuxTdxProvider::new();
-
         match provider.get_launch_measurement() {
             Ok(mrtd) => {
                 // Verify it returned a non-empty buffer

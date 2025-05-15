@@ -190,11 +190,11 @@ mod tests {
                     println!("{}", e);
                     Ok(())
                 }
-                // Any other error type is unexpected
                 Error::QuoteError(_) => {
                     println!("{}", e);
                     Ok(())
                 }
+		// Any other error type is unexpected
                 _ => Err(e),
             },
         }
