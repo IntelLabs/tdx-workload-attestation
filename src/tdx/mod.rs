@@ -124,6 +124,7 @@ impl AttestationProvider for LinuxTdxProvider {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::tdx::test_utils::handle_expected_tdx_error;
 
     #[test]
     fn test_get_attestation_report() -> Result<()> {
@@ -138,10 +139,7 @@ mod tests {
                     .map_err(|e| Error::SerializationError(e.to_string()))?;
                 Ok(())
             }
-            Err(e) => {
-                println!("An error occurred getting the attestation report: {}", e);
-                Ok(())
-            }
+            Err(e) => handle_expected_tdx_error(e),
         }
     }
 
@@ -154,10 +152,23 @@ mod tests {
                 assert!(!mrtd.is_empty());
                 Ok(())
             }
-            Err(e) => {
-                println!("An error occurred getting the launch measurement: {}", e);
-                Ok(())
+            Err(e) => handle_expected_tdx_error(e),
+        }
+    }
+}
+#[cfg(test)]
+pub(crate) mod test_utils {
+    use crate::error::{Error, Result};
+
+    pub fn handle_expected_tdx_error(e: Error) -> Result<()> {
+        match e {
+            // These errors are expected on non-TDX hosts
+            Error::NotSupported(_) | Error::QuoteError(_) => {
+                println!("Test skipped on non-TDX host: {}", e);
+                Ok(()) // Return OK to pass the test
             }
+            // Any other error should cause the test to fail!
+            _ => Err(e),
         }
     }
 }

@@ -64,6 +64,7 @@ pub fn get_tdreport_v15_kvm(report_data: &[u8; TDX_REPORT_DATA_LEN]) -> Result<T
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::tdx::test_utils::handle_expected_tdx_error;
 
     // No need to test is_v15_kvm_device() because it's simply a public wrapper
     // around device::is_available(), which has its own unit test
@@ -77,7 +78,7 @@ mod tests {
                 println!("Got TDREPORT: {:?}", report);
                 Ok(())
             }
-            Err(e) => Err(e),
+            Err(e) => handle_expected_tdx_error(e),
         }
     }
 }

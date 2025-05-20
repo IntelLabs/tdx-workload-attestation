@@ -150,6 +150,7 @@ impl TdxDeviceKvmV15 {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::tdx::test_utils::handle_expected_tdx_error;
 
     #[test]
     fn test_is_available() -> Result<()> {
@@ -160,17 +161,10 @@ mod tests {
                 Ok(())
             }
             Ok(false) => {
-                println!("TDX device is a broken symlink, which is not supported");
+                println!("TDX device is not available, which is expected on non-TDX hosts");
                 Ok(())
             }
-            Err(e) => match e {
-                Error::NotSupported(_) => {
-                    println!("{}", e);
-                    Ok(())
-                }
-                // Any other error type is unexpected
-                _ => Err(e),
-            },
+            Err(e) => handle_expected_tdx_error(e),
         }
     }
 
@@ -185,18 +179,7 @@ mod tests {
                 assert!(report != [0; 1088]);
                 Ok(())
             }
-            Err(e) => match e {
-                Error::NotSupported(_) => {
-                    println!("{}", e);
-                    Ok(())
-                }
-                Error::QuoteError(_) => {
-                    println!("{}", e);
-                    Ok(())
-                }
-                // Any other error type is unexpected
-                _ => Err(e),
-            },
+            Err(e) => handle_expected_tdx_error(e),
         }
     }
 }
