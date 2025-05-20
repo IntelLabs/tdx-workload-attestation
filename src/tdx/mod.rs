@@ -156,6 +156,11 @@ mod tests {
         }
     }
 }
+/// Test utilities for TDX-related tests.
+///
+/// This module provides helper functions for testing TDX functionality in
+/// environments without actual TDX hardware support. These utilities help ensure
+/// that tests can run successfully both on TDX-enabled and non-TDX hosts.
 #[cfg(test)]
 pub(crate) mod test_utils {
     use crate::error::{Error, Result};
