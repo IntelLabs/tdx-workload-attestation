@@ -58,7 +58,7 @@ pub fn get_tdreport_v15_kvm(report_data: &[u8; TDX_REPORT_DATA_LEN]) -> Result<T
     let raw_report = tdx_device.get_tdreport_raw(&req)?;
 
     // Extract the report from the raw report
-    Ok(TdReportV15::get_tdreport_from_bytes(&raw_report))
+    TdReportV15::get_tdreport_from_bytes(&raw_report)
 }
 
 #[cfg(test)]
@@ -77,10 +77,7 @@ mod tests {
                 println!("Got TDREPORT: {:?}", report);
                 Ok(())
             }
-            Err(e) => {
-                println!("An error occurred trying to quote the TD: {}", e);
-                Ok(())
-            }
+            Err(e) => Err(e),
         }
     }
 }
