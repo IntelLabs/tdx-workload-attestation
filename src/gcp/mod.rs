@@ -69,7 +69,14 @@ impl GcpTdxHost {
             .arg("cat")
             .arg(storage_url)
             .output()
-            .expect("failed to retrieve GCP launch endorsement");
+            .map_err(|e| Error::IoError(e))?;
+
+        if !output.status.success() {
+            return Err(Error::VerificationError(format!(
+                "failed to retrieve GCP launch endorsement for TD verification: {}",
+                String::from_utf8_lossy(&output.stderr)
+            )));
+        }
 
         let endorsement = endorsement::VMLaunchEndorsement::parse_from_bytes(&output.stdout)
             .map_err(|e| Error::SerializationError(e.to_string()))?;

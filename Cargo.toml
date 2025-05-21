@@ -9,12 +9,12 @@ license = "Apache-2.0"
 default = ["tdx-linux"]
 yaml = []
 tdx-linux = ["dep:vmm-sys-util", "dep:serde-big-array"]
-host-verification = []
-host-gcp-tdx = ["tdx-linux", "host-verification", "dep:protobuf", "dep:curl"]
+host-verification = ["dep:openssl"]
+host-gcp-tdx = ["tdx-linux", "host-verification", "dep:protobuf"]
 
 [dependencies]
 hex = "0.4.3"
-openssl = "0.10.72"
+openssl = { version = "0.10.72", optional = true }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 thiserror = "1.0"
@@ -25,4 +25,6 @@ protobuf = {version = "3.7.2", optional = true }
 
 [build-dependencies]
 protobuf-codegen = { version = "3.7.2" }
-curl = {version = "0.4.47", optional = true }
+
+[dev-dependencies]
+rand = { version = "0.9.1" }

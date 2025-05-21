@@ -21,6 +21,7 @@
 //! - The module is currently designed to work specifically with Intel TDX 1.5 devices.
 //! - The `TDREPORT` structure and its substructures are based on the TDX 1.5 specification.
 
+use crate::error::{Error, Result};
 use crate::tdx::{TDX_MR_REG_LEN, TDX_REPORT_DATA_LEN};
 
 use serde::{Deserialize, Serialize};
@@ -43,7 +44,7 @@ const TDREPORT_REQ_LEN: usize = TDX_REPORT_DATA_LEN + TDREPORT_LEN;
 /// All TDX attestation-related data structures should implement this trait.
 trait BinaryBlob {
     /// Populates the structure from a slice of raw bytes.
-    fn from_bytes(&mut self, raw_bytes: &[u8]);
+    fn from_bytes(&mut self, raw_bytes: &[u8]) -> Result<()>;
 }
 
 #[derive(Copy, Clone, Debug, Serialize, Deserialize)]
@@ -89,8 +90,12 @@ impl ReportMacStruct {
 }
 
 impl BinaryBlob for ReportMacStruct {
-    fn from_bytes(&mut self, raw_bytes: &[u8]) {
-        assert!(raw_bytes.len() == REPORT_MAC_STRUCT_LEN);
+    fn from_bytes(&mut self, raw_bytes: &[u8]) -> Result<()> {
+        if raw_bytes.len() != REPORT_MAC_STRUCT_LEN {
+            return Err(Error::ParseError(
+                "ReportMacStruct length is wrong".to_string(),
+            ));
+        }
 
         // copy the bytes into the struct
         let mut offset: usize = 0;
@@ -114,6 +119,8 @@ impl BinaryBlob for ReportMacStruct {
             .copy_from_slice(&raw_bytes[offset..offset + 32]);
         offset += 32;
         self.mac.copy_from_slice(&raw_bytes[offset..offset + 32]);
+
+        Ok(())
     }
 }
 
@@ -157,8 +164,10 @@ impl TeeTcbInfo {
 }
 
 impl BinaryBlob for TeeTcbInfo {
-    fn from_bytes(&mut self, raw_bytes: &[u8]) {
-        assert!(raw_bytes.len() == TEE_TCB_INFO_LEN);
+    fn from_bytes(&mut self, raw_bytes: &[u8]) -> Result<()> {
+        if raw_bytes.len() != TEE_TCB_INFO_LEN {
+            return Err(Error::ParseError("TeeTcbInfo length is wrong".to_string()));
+        }
 
         // copy the bytes into the struct
         let mut offset: usize = 0;
@@ -180,6 +189,8 @@ impl BinaryBlob for TeeTcbInfo {
         offset += 16;
         self.reserved
             .copy_from_slice(&raw_bytes[offset..offset + 95]);
+
+        Ok(())
     }
 }
 
@@ -245,8 +256,10 @@ impl TdInfo {
 }
 
 impl BinaryBlob for TdInfo {
-    fn from_bytes(&mut self, raw_bytes: &[u8]) {
-        assert!(raw_bytes.len() == TD_INFO_LEN);
+    fn from_bytes(&mut self, raw_bytes: &[u8]) -> Result<()> {
+        if raw_bytes.len() != TD_INFO_LEN {
+            return Err(Error::ParseError("TdInfo length is wrong".to_string()));
+        }
 
         // copy the bytes into the struct
         let mut offset: usize = 0;
@@ -278,6 +291,8 @@ impl BinaryBlob for TdInfo {
         offset += 48;
         self.reserved
             .copy_from_slice(&raw_bytes[offset..offset + 64]);
+
+        Ok(())
     }
 }
 
@@ -301,25 +316,26 @@ pub struct TdReportV15 {
 
 impl BinaryBlob for TdReportV15 {
     /// Populates the `TdReportV15` structure from a slice of raw bytes.
-    fn from_bytes(&mut self, raw_bytes: &[u8]) {
-        assert!(raw_bytes.len() == TDREPORT_REQ_LEN);
-
-        let report_bytes = &raw_bytes[TDX_REPORT_DATA_LEN..];
-        //println!("Got td report: {:?}", report_bytes);
+    fn from_bytes(&mut self, raw_bytes: &[u8]) -> Result<()> {
+        if raw_bytes.len() != TDREPORT_LEN {
+            return Err(Error::ParseError("TdReport length is wrong".to_string()));
+        }
 
         // copy the bytes into the struct
         let mut offset: usize = 0;
         self.report_mac_struct
-            .from_bytes(&report_bytes[offset..REPORT_MAC_STRUCT_LEN]);
+            .from_bytes(&raw_bytes[offset..REPORT_MAC_STRUCT_LEN])?;
         offset += REPORT_MAC_STRUCT_LEN;
         self.tee_tcb_info
-            .from_bytes(&report_bytes[offset..offset + TEE_TCB_INFO_LEN]);
+            .from_bytes(&raw_bytes[offset..offset + TEE_TCB_INFO_LEN])?;
         offset += TEE_TCB_INFO_LEN;
         self.reserved
-            .copy_from_slice(&report_bytes[offset..offset + TDREPORT_RESERVED_LEN]);
+            .copy_from_slice(&raw_bytes[offset..offset + TDREPORT_RESERVED_LEN]);
         offset += TDREPORT_RESERVED_LEN;
         self.td_info
-            .from_bytes(&report_bytes[offset..offset + TD_INFO_LEN]);
+            .from_bytes(&raw_bytes[offset..offset + TD_INFO_LEN])?;
+
+        Ok(())
     }
 }
 
@@ -336,21 +352,84 @@ impl TdReportV15 {
     }
 
     /// Creates a new `TdReportV15` instance from raw bytes.
-    pub fn get_tdreport_from_bytes(raw_bytes: &[u8; TDREPORT_REQ_LEN]) -> TdReportV15 {
+    pub fn get_tdreport_from_bytes(raw_bytes: &[u8; TDREPORT_REQ_LEN]) -> Result<TdReportV15> {
         let mut tdreport = TdReportV15 {
             report_mac_struct: ReportMacStruct::new(),
             tee_tcb_info: TeeTcbInfo::new(),
             reserved: [0; TDREPORT_RESERVED_LEN],
             td_info: TdInfo::new(),
         };
-        tdreport.from_bytes(raw_bytes);
 
-        tdreport
+        let report_bytes = &raw_bytes[TDX_REPORT_DATA_LEN..];
+        tdreport.from_bytes(report_bytes)?;
+
+        Ok(tdreport)
     }
 
     /// Returns the `MRTD` field from the TDX report, which is a 48-byte
     /// SHA-3 hash of the TD memory and configuration.
     pub fn get_mrtd(&self) -> [u8; TDX_MR_REG_LEN] {
         self.td_info.mrtd
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use rand::prelude::SliceRandom;
+
+    #[test]
+    fn test_create_request() -> Result<()> {
+        let report_data: [u8; TDX_REPORT_DATA_LEN] = [1; TDX_REPORT_DATA_LEN];
+
+        let request = TdReportV15::create_request(&report_data);
+
+        assert!(&request[0..TDX_REPORT_DATA_LEN] == [1; TDX_REPORT_DATA_LEN]);
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_get_tdreport_from_bytes() -> Result<()> {
+        let mut rng = rand::rng();
+        let mut rand_bytes: Vec<u8> = (0..127).collect();
+        rand_bytes.resize(TDREPORT_REQ_LEN, 0);
+        rand_bytes.shuffle(&mut rng);
+
+        let rand_req: [u8; TDREPORT_REQ_LEN] = rand_bytes.try_into().unwrap();
+
+        // this should not throw an error
+        match TdReportV15::get_tdreport_from_bytes(&rand_req) {
+            Ok(_r) => Ok(()),
+            Err(e) => Err(e),
+        }
+    }
+
+    #[test]
+    fn test_get_tdreport_from_bytes_wrong_size() -> Result<()> {
+        let mut tdreport = TdReportV15 {
+            report_mac_struct: ReportMacStruct::new(),
+            tee_tcb_info: TeeTcbInfo::new(),
+            reserved: [0; TDREPORT_RESERVED_LEN],
+            td_info: TdInfo::new(),
+        };
+
+        let mut rng = rand::rng();
+        let mut rand_bytes: Vec<u8> = (0..127).collect();
+        rand_bytes.shuffle(&mut rng);
+
+        match tdreport.from_bytes(&rand_bytes) {
+            Err(e) => match e {
+                Error::ParseError(_) => {
+                    println!("{}", e);
+                    Ok(())
+                }
+                // any other error is unexpected
+                _ => Err(e),
+            },
+            _ => Err(Error::NotSupported(
+                "Wrong buffer size should throw an error".to_string(),
+            )),
+        }
     }
 }

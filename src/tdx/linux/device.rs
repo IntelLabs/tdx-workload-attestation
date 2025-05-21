@@ -74,10 +74,14 @@ impl TdxDeviceKvmV15 {
     /// Creates a new instance of `TdxDeviceKvmV15`, and ensures that the TDX
     /// device node is available before creating the instance.
     pub fn new() -> TdxDeviceKvmV15 {
-        assert!(Self::is_available().expect("Intel TDX KVM device node supported"));
-
-        TdxDeviceKvmV15 {
-            device_path: TDX15_DEV_PATH.to_string(),
+        match Self::is_available() {
+            Ok(true) => TdxDeviceKvmV15 {
+                device_path: TDX15_DEV_PATH.to_string(),
+            },
+            // return an empty device path, if TDX isn't available or there was an error
+            _ => TdxDeviceKvmV15 {
+                device_path: "".to_string(),
+            },
         }
     }
 
@@ -103,7 +107,13 @@ impl TdxDeviceKvmV15 {
     /// Retrieves the raw TD report (Quote/Signed Attestation Report) from the
     /// TDX device by using an ioctl system call to interact with the device.
     pub fn get_tdreport_raw(&self, &req: &[u8; 1088]) -> Result<[u8; 1088]> {
-        assert!(TdxDeviceKvmV15::is_available().expect("Intel TDX KVM device node supported"));
+        // Before we do anything, check if the device_path is empty.
+        // If it is, TDX isn't supported, throw an error
+        if self.device_path.is_empty() {
+            return Err(Error::NotSupported(
+                "TDX 1.5 KVM device is not supported".to_string(),
+            ));
+        }
 
         // 1. Get device file descriptor: must open in RW mode
         let tdx_dev = fs::File::options()
@@ -116,8 +126,6 @@ impl TdxDeviceKvmV15 {
                     self.device_path, e
                 ))
             })?;
-
-        println!("Found TDX device: {:?}", tdx_dev);
 
         let mut resp = req;
 
@@ -136,5 +144,42 @@ impl TdxDeviceKvmV15 {
         drop(tdx_dev);
 
         Ok(resp)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::tdx::test_utils::handle_expected_tdx_error;
+
+    #[test]
+    fn test_is_available() -> Result<()> {
+        match TdxDeviceKvmV15::is_available() {
+            Ok(true) => {
+                let path = Path::new(TDX15_DEV_PATH);
+                assert!(fs::exists(path).expect("TDX 1.5 KVM device should be available"));
+                Ok(())
+            }
+            Ok(false) => {
+                println!("TDX device is not available, which is expected on non-TDX hosts");
+                Ok(())
+            }
+            Err(e) => handle_expected_tdx_error(e),
+        }
+    }
+
+    #[test]
+    fn test_get_tdreport_raw() -> Result<()> {
+        let device = TdxDeviceKvmV15::new();
+        let request: [u8; 1088] = [0; 1088];
+
+        match device.get_tdreport_raw(&request) {
+            Ok(report) => {
+                // Assert that the device didn't just return an empty report
+                assert!(report != [0; 1088]);
+                Ok(())
+            }
+            Err(e) => handle_expected_tdx_error(e),
+        }
     }
 }

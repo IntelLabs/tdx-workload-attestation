@@ -47,7 +47,7 @@ pub fn is_v15_kvm_device() -> Result<bool> {
 }
 
 /// Retrieves the `TDREPORT` from the Intel TDX 1.5 KVM device and parses it into a `TdReportV15` structure.
-pub fn get_tdreport_v15_kvm(report_data: &[u8; TDX_REPORT_DATA_LEN]) -> TdReportV15 {
+pub fn get_tdreport_v15_kvm(report_data: &[u8; TDX_REPORT_DATA_LEN]) -> Result<TdReportV15> {
     // Initialize the KVM device for TDX 1.5
     let tdx_device = device::TdxDeviceKvmV15::new();
 
@@ -55,8 +55,30 @@ pub fn get_tdreport_v15_kvm(report_data: &[u8; TDX_REPORT_DATA_LEN]) -> TdReport
     let req = TdReportV15::create_request(report_data);
 
     // Get the TDREPORT from the hardware device
-    let raw_report = tdx_device.get_tdreport_raw(&req).unwrap();
+    let raw_report = tdx_device.get_tdreport_raw(&req)?;
 
     // Extract the report from the raw report
     TdReportV15::get_tdreport_from_bytes(&raw_report)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::tdx::test_utils::handle_expected_tdx_error;
+
+    // No need to test is_v15_kvm_device() because it's simply a public wrapper
+    // around device::is_available(), which has its own unit test
+
+    #[test]
+    fn test_get_tdreport_v15_kvm() -> Result<()> {
+        let report_data: [u8; 64] = [0; 64];
+
+        match get_tdreport_v15_kvm(&report_data) {
+            Ok(report) => {
+                println!("Got TDREPORT: {:?}", report);
+                Ok(())
+            }
+            Err(e) => handle_expected_tdx_error(e),
+        }
+    }
 }

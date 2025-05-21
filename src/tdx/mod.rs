@@ -58,7 +58,7 @@ impl LinuxTdxProvider {
     /// # Returns
     ///
     /// A `TdReportV15` struct containing the TD report data.
-    fn get_tdreport(&self) -> TdReportV15 {
+    fn get_tdreport(&self) -> Result<TdReportV15> {
         let report_data = [0; 64]; // keep report data empty for now
 
         linux::get_tdreport_v15_kvm(&report_data)
@@ -86,7 +86,7 @@ impl AttestationProvider for LinuxTdxProvider {
     /// println!("Attestation Report: {}", report);
     /// ```
     fn get_attestation_report(&self) -> Result<String> {
-        let report = self.get_tdreport();
+        let report = self.get_tdreport()?;
 
         // Serialize it to a JSON string.
         let report_str =
@@ -115,8 +115,65 @@ impl AttestationProvider for LinuxTdxProvider {
     /// println!("Launch Measurement: {:?}", measurement);
     /// ```
     fn get_launch_measurement(&self) -> Result<[u8; 48]> {
-        let report = self.get_tdreport();
+        let report = self.get_tdreport()?;
 
         Ok(report.get_mrtd())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::tdx::test_utils::handle_expected_tdx_error;
+
+    #[test]
+    fn test_get_attestation_report() -> Result<()> {
+        let provider = LinuxTdxProvider::new();
+        match provider.get_attestation_report() {
+            Ok(report) => {
+                // Verify it returned a non-empty string
+                assert!(!report.is_empty());
+
+                // Verify report is valid JSON
+                let _: serde_json::Value = serde_json::from_str(&report)
+                    .map_err(|e| Error::SerializationError(e.to_string()))?;
+                Ok(())
+            }
+            Err(e) => handle_expected_tdx_error(e),
+        }
+    }
+
+    #[test]
+    fn test_get_launch_measurement() -> Result<()> {
+        let provider = LinuxTdxProvider::new();
+        match provider.get_launch_measurement() {
+            Ok(mrtd) => {
+                // Verify it returned a non-empty buffer
+                assert!(!mrtd.is_empty());
+                Ok(())
+            }
+            Err(e) => handle_expected_tdx_error(e),
+        }
+    }
+}
+/// Test utilities for TDX-related tests.
+///
+/// This module provides helper functions for testing TDX functionality in
+/// environments without actual TDX hardware support. These utilities help ensure
+/// that tests can run successfully both on TDX-enabled and non-TDX hosts.
+#[cfg(test)]
+pub(crate) mod test_utils {
+    use crate::error::{Error, Result};
+
+    pub fn handle_expected_tdx_error(e: Error) -> Result<()> {
+        match e {
+            // These errors are expected on non-TDX hosts
+            Error::NotSupported(_) | Error::QuoteError(_) => {
+                println!("Test skipped on non-TDX host: {}", e);
+                Ok(()) // Return OK to pass the test
+            }
+            // Any other error should cause the test to fail!
+            _ => Err(e),
+        }
     }
 }
