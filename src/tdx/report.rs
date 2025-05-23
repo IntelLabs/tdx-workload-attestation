@@ -341,6 +341,16 @@ impl BinaryBlob for TdReportV15 {
 
 impl TdReportV15 {
     /// Creates a new `TdReportV15` instance with default values.
+    pub fn new() -> TdReportV15 {	
+	TdReportV15 {
+            report_mac_struct: ReportMacStruct::new(),
+            tee_tcb_info: TeeTcbInfo::new(),
+            reserved: [0; TDREPORT_RESERVED_LEN],
+            td_info: TdInfo::new(),
+        }
+    }
+
+    /// Creates a request for retrieving a TDX report from the CPU.
     pub fn create_request(report_data: &[u8; TDX_REPORT_DATA_LEN]) -> [u8; TDREPORT_REQ_LEN] {
         let mut req: [u8; TDREPORT_REQ_LEN] = [0; TDREPORT_REQ_LEN];
         for i in 0..TDX_REPORT_DATA_LEN {
@@ -353,12 +363,7 @@ impl TdReportV15 {
 
     /// Creates a new `TdReportV15` instance from raw bytes.
     pub fn get_tdreport_from_bytes(raw_bytes: &[u8; TDREPORT_REQ_LEN]) -> Result<TdReportV15> {
-        let mut tdreport = TdReportV15 {
-            report_mac_struct: ReportMacStruct::new(),
-            tee_tcb_info: TeeTcbInfo::new(),
-            reserved: [0; TDREPORT_RESERVED_LEN],
-            td_info: TdInfo::new(),
-        };
+        let mut tdreport = TdReportV15::new();
 
         let report_bytes = &raw_bytes[TDX_REPORT_DATA_LEN..];
         tdreport.from_bytes(report_bytes)?;
@@ -407,12 +412,7 @@ mod tests {
 
     #[test]
     fn test_get_tdreport_from_bytes_wrong_size() -> Result<()> {
-        let mut tdreport = TdReportV15 {
-            report_mac_struct: ReportMacStruct::new(),
-            tee_tcb_info: TeeTcbInfo::new(),
-            reserved: [0; TDREPORT_RESERVED_LEN],
-            td_info: TdInfo::new(),
-        };
+        let mut tdreport = TdReportV15::new();
 
         let mut rng = rand::rng();
         let mut rand_bytes: Vec<u8> = (0..127).collect();

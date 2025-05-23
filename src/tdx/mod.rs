@@ -115,8 +115,7 @@ impl AttestationProvider for LinuxTdxProvider {
     /// println!("Launch Measurement: {:?}", measurement);
     /// ```
     fn get_launch_measurement(&self) -> Result<[u8; 48]> {
-        let report = self.get_tdreport()?;
-
+	let report = self.get_tdreport()?;
         Ok(report.get_mrtd())
     }
 }
@@ -146,6 +145,7 @@ mod tests {
     #[test]
     fn test_get_launch_measurement() -> Result<()> {
         let provider = LinuxTdxProvider::new();
+	let _r = provider.get_attestation_report()?;
         match provider.get_launch_measurement() {
             Ok(mrtd) => {
                 // Verify it returned a non-empty buffer
