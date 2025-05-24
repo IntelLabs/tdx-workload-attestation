@@ -145,7 +145,6 @@ mod tests {
     #[test]
     fn test_get_launch_measurement() -> Result<()> {
         let provider = LinuxTdxProvider::new();
-	let _r = provider.get_attestation_report()?;
         match provider.get_launch_measurement() {
             Ok(mrtd) => {
                 // Verify it returned a non-empty buffer
