@@ -341,8 +341,8 @@ impl BinaryBlob for TdReportV15 {
 
 impl TdReportV15 {
     /// Creates a new `TdReportV15` instance with default values.
-    pub fn new() -> TdReportV15 {	
-	TdReportV15 {
+    pub fn new() -> TdReportV15 {
+        TdReportV15 {
             report_mac_struct: ReportMacStruct::new(),
             tee_tcb_info: TeeTcbInfo::new(),
             reserved: [0; TDREPORT_RESERVED_LEN],
