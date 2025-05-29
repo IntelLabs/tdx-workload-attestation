@@ -5,6 +5,10 @@ edition = "2024"
 authors = ["Intel Corporation"]
 license = "Apache-2.0"
 
+[[bin]]
+name = "tdx-attest"
+path = "src/cli/main.rs"
+
 [features]
 default = ["tdx-linux"]
 yaml = []

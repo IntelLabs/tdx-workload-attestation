@@ -7,7 +7,7 @@ use tdx_workload_attestation::{
     tdx::LinuxTdxProvider,
 };
 
-pub mod cli;
+mod platform;
 
 #[derive(Parser)]
 #[command(version, about)]
@@ -21,7 +21,7 @@ enum Commands {
     /// Platform-related commands
     Platform {
         #[command(subcommand)]
-        command: cli::platform::PlatformCommands,
+        command: platform::PlatformCommands,
     },
     /// Quote the TD, if available
     Quote {
@@ -86,7 +86,7 @@ fn main() -> Result<()> {
 
     // Handle commands
     let result = match args.command {
-        Commands::Platform { command } => cli::platform::handle(command),
+        Commands::Platform { command } => platform::handle(command),
         Commands::Quote {
             mrtd_only,
             out_file,

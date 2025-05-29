@@ -45,20 +45,34 @@ cargo build --features host-gcp-tdx
 ```
 The necessary root certificates are downloaded during this build.
 
-Use the `--examples` flag to build the examples.
+### Use the library
 
-### Run the examples
+To test and showcase how the library can be used, we provide a simple
+`tdx-attest` CLI tool with the following commands.
+
+#### Get TDX platform info
+
+Print the platform's name:
+```bash
+tdx-attest platform name
+```
+If running on a TDX 1.5 guest, the output should be `tdx-linux`.
+
+Check if TDX is available on the platform:
+``` bash
+tdx-attest platform is-tdx-available
+```
+
+#### Obtain TDX attestations
 
 Print the VM's current Intel TDX attestation report:
 ```bash
-sudo ./target/debug/examples/report
+tdx-attest quote
 ```
+To only print out the launch measurement (MRTD), run the `quote` command with
+the `-m` flag.
 
-Verify the GCP host's launch endorsement for the VM (`host-gcp-tdx` feature
-only):
-```bash
-sudo ./target/debug/examples/gcp
-```
+You may also save the attestation report to a local file with the `-s` and `-o <filename>` options.
 
 ## Disclaimer
 
