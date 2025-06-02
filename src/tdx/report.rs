@@ -1,5 +1,3 @@
-// Rust implementation of https://github.com/canonical/tdx/blob/2cd1a182323bad17d80a2f491c63679ac6b73e7f/tests/lib/tdx-tools/src/tdxtools/tdreport.py
-
 //! # Intel TDX `TDREPORT` Structures
 //!
 //! This module provides data structures and utilities for working with TDX
@@ -28,10 +26,10 @@ use serde::{Deserialize, Serialize};
 use serde_big_array::BigArray;
 
 // constants for report struct sizes
-const REPORT_MAC_STRUCT_LEN: usize = 256 as usize;
-const TEE_TCB_INFO_LEN: usize = 239 as usize;
-const TDREPORT_RESERVED_LEN: usize = 17 as usize;
-const TD_INFO_LEN: usize = 512 as usize;
+const REPORT_MAC_STRUCT_LEN: usize = 256_usize;
+const TEE_TCB_INFO_LEN: usize = 239_usize;
+const TDREPORT_RESERVED_LEN: usize = 17_usize;
+const TD_INFO_LEN: usize = 512_usize;
 
 // The length of the TDREPORT (1024 bytes)
 const TDREPORT_LEN: usize =
@@ -44,7 +42,7 @@ const TDREPORT_REQ_LEN: usize = TDX_REPORT_DATA_LEN + TDREPORT_LEN;
 /// All TDX attestation-related data structures should implement this trait.
 trait BinaryBlob {
     /// Populates the structure from a slice of raw bytes.
-    fn from_bytes(&mut self, raw_bytes: &[u8]) -> Result<()>;
+    fn populate_from_bytes(&mut self, raw_bytes: &[u8]) -> Result<()>;
 }
 
 #[derive(Copy, Clone, Debug, Serialize, Deserialize)]
@@ -90,7 +88,7 @@ impl ReportMacStruct {
 }
 
 impl BinaryBlob for ReportMacStruct {
-    fn from_bytes(&mut self, raw_bytes: &[u8]) -> Result<()> {
+    fn populate_from_bytes(&mut self, raw_bytes: &[u8]) -> Result<()> {
         if raw_bytes.len() != REPORT_MAC_STRUCT_LEN {
             return Err(Error::ParseError(
                 "ReportMacStruct length is wrong".to_string(),
@@ -164,7 +162,7 @@ impl TeeTcbInfo {
 }
 
 impl BinaryBlob for TeeTcbInfo {
-    fn from_bytes(&mut self, raw_bytes: &[u8]) -> Result<()> {
+    fn populate_from_bytes(&mut self, raw_bytes: &[u8]) -> Result<()> {
         if raw_bytes.len() != TEE_TCB_INFO_LEN {
             return Err(Error::ParseError("TeeTcbInfo length is wrong".to_string()));
         }
@@ -256,7 +254,7 @@ impl TdInfo {
 }
 
 impl BinaryBlob for TdInfo {
-    fn from_bytes(&mut self, raw_bytes: &[u8]) -> Result<()> {
+    fn populate_from_bytes(&mut self, raw_bytes: &[u8]) -> Result<()> {
         if raw_bytes.len() != TD_INFO_LEN {
             return Err(Error::ParseError("TdInfo length is wrong".to_string()));
         }
@@ -316,7 +314,7 @@ pub struct TdReportV15 {
 
 impl BinaryBlob for TdReportV15 {
     /// Populates the `TdReportV15` structure from a slice of raw bytes.
-    fn from_bytes(&mut self, raw_bytes: &[u8]) -> Result<()> {
+    fn populate_from_bytes(&mut self, raw_bytes: &[u8]) -> Result<()> {
         if raw_bytes.len() != TDREPORT_LEN {
             return Err(Error::ParseError("TdReport length is wrong".to_string()));
         }
@@ -324,18 +322,24 @@ impl BinaryBlob for TdReportV15 {
         // copy the bytes into the struct
         let mut offset: usize = 0;
         self.report_mac_struct
-            .from_bytes(&raw_bytes[offset..REPORT_MAC_STRUCT_LEN])?;
+            .populate_from_bytes(&raw_bytes[offset..REPORT_MAC_STRUCT_LEN])?;
         offset += REPORT_MAC_STRUCT_LEN;
         self.tee_tcb_info
-            .from_bytes(&raw_bytes[offset..offset + TEE_TCB_INFO_LEN])?;
+            .populate_from_bytes(&raw_bytes[offset..offset + TEE_TCB_INFO_LEN])?;
         offset += TEE_TCB_INFO_LEN;
         self.reserved
             .copy_from_slice(&raw_bytes[offset..offset + TDREPORT_RESERVED_LEN]);
         offset += TDREPORT_RESERVED_LEN;
         self.td_info
-            .from_bytes(&raw_bytes[offset..offset + TD_INFO_LEN])?;
+            .populate_from_bytes(&raw_bytes[offset..offset + TD_INFO_LEN])?;
 
         Ok(())
+    }
+}
+
+impl Default for TdReportV15 {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -364,7 +368,7 @@ impl TdReportV15 {
         let mut tdreport = TdReportV15::new();
 
         let report_bytes = &raw_bytes[TDX_REPORT_DATA_LEN..];
-        tdreport.from_bytes(report_bytes)?;
+        tdreport.populate_from_bytes(report_bytes)?;
 
         Ok(tdreport)
     }
@@ -387,7 +391,7 @@ mod tests {
 
         let request = TdReportV15::create_request(&report_data);
 
-        assert!(&request[0..TDX_REPORT_DATA_LEN] == [1; TDX_REPORT_DATA_LEN]);
+        assert!(request[0..TDX_REPORT_DATA_LEN] == [1; TDX_REPORT_DATA_LEN]);
 
         Ok(())
     }
@@ -416,7 +420,7 @@ mod tests {
         let mut rand_bytes: Vec<u8> = (0..127).collect();
         rand_bytes.shuffle(&mut rng);
 
-        match tdreport.from_bytes(&rand_bytes) {
+        match tdreport.populate_from_bytes(&rand_bytes) {
             Err(e) => match e {
                 Error::ParseError(_) => {
                     println!("{}", e);

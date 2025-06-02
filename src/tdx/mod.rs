@@ -33,16 +33,22 @@ pub mod report;
 use report::TdReportV15;
 
 /// The length of the `report_data` field in the TDX report.
-pub const TDX_REPORT_DATA_LEN: usize = 64 as usize;
+pub const TDX_REPORT_DATA_LEN: usize = 64_usize;
 
 /// The length of the TDX measurement registers.
-pub const TDX_MR_REG_LEN: usize = 48 as usize;
+pub const TDX_MR_REG_LEN: usize = 48_usize;
 
 /// An interface for retrieving attestation reports and launchmeasurements with
 /// TDX on Linux VM guests.
 ///
 /// This struct implements the `AttestationProvider` trait.
 pub struct LinuxTdxProvider;
+
+impl Default for LinuxTdxProvider {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 
 impl LinuxTdxProvider {
     /// Creates a new instance of `LinuxTdxProvider`.
