@@ -116,7 +116,6 @@ impl AttestationProvider for LinuxTdxProvider {
     /// ```
     fn get_launch_measurement(&self) -> Result<[u8; 48]> {
         let report = self.get_tdreport()?;
-
         Ok(report.get_mrtd())
     }
 }

@@ -5,6 +5,10 @@ edition = "2024"
 authors = ["Intel Corporation"]
 license = "Apache-2.0"
 
+[[bin]]
+name = "tdx-attest"
+path = "src/cli/main.rs"
+
 [features]
 default = ["tdx-linux"]
 yaml = []
@@ -13,6 +17,7 @@ host-verification = ["dep:openssl"]
 host-gcp-tdx = ["tdx-linux", "host-verification", "dep:protobuf"]
 
 [dependencies]
+clap = { version = "4.5.38", features = ["derive"] }
 hex = "0.4.3"
 openssl = { version = "0.10.72", optional = true }
 serde = { version = "1.0", features = ["derive"] }
