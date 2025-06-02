@@ -6,14 +6,14 @@
 //! The library provides the following functionality:
 //! - `error`: Custom error types
 //! - `gcp`: Google Cloud Platform (GCP) host interface for TDX guests (when
-//! compiled with the `host-gcp-tdx` feature)
+//!   compiled with the `host-gcp-tdx` feature)
 //! - `host`: Host interface for VM-based trusted execution environment (TEE)
-//! guests (when compiled with the `host-verification` feature)
+//!   guests (when compiled with the `host-verification` feature)
 //! - `provider`: Trusted execution environment (TEE) attestation interface
 //! - `tdx`: Intel TDX guest attestation interface (when compiled with the
-//! `tdx-linux` feature)
+//!   `tdx-linux` feature)
 //! - `verification`: Workload attestation verification utilities (when compiled
-//! with the `host-verification` feature)
+//!   with the `host-verification` feature)
 //!
 //! ## Example Usage
 //!
@@ -36,9 +36,9 @@
 //!         // Get the launch measurement
 //!         let measurement = provider.get_launch_measurement().expect("Failed to get launch measurement");
 //!
-//!        // Do something else
+//!         // Do something else
 //!     },
-//!     _ => Err(Error::NotSupported("This platform is not supported".to_string())),  
+//!     _ => Err(Error::NotSupported("This platform is not supported".to_string())),
 //! }
 //! ```
 
@@ -70,7 +70,7 @@ use tdx::linux::is_v15_kvm_device;
 /// # Errors
 ///
 /// Returns an error if support for TDX 1.5 on Linux cannot be determined
-/// (requires the `tdx-linux1 feature).
+/// (requires the `tdx-linux` feature).
 pub fn get_platform_name() -> Result<String> {
     let name = std::env::consts::OS;
 

@@ -57,7 +57,7 @@ pub fn get_x509_pubkey(cert: &X509) -> Result<PKey<Public>> {
 ///
 /// Returns an `Error::ParseError` if the certificate cannot be parsed.
 pub fn x509_from_der_bytes(der_bytes: &[u8]) -> Result<X509> {
-    X509::from_der(&der_bytes).map_err(|e| Error::ParseError(e.to_string()))
+    X509::from_der(der_bytes).map_err(|e| Error::ParseError(e.to_string()))
 }
 
 /// Loads an X.509 certificate from a file in DER format.
@@ -94,7 +94,7 @@ pub fn load_x509_der(cert_path: &str) -> Result<X509> {
 /// This function performs two checks to verify the validity of the certificate:
 /// 1. It checks whether the provided `issuer_cert` is the issuer of the `cert`.
 /// 2. It verifies the signature of the `cert` using the public key from the
-/// `issuer_cert`.
+///    `issuer_cert`.
 ///
 /// # Errors
 ///
@@ -102,7 +102,7 @@ pub fn load_x509_der(cert_path: &str) -> Result<X509> {
 /// - `Error::SignatureError` if the signature verification fails.
 pub fn verify_x509_cert(cert: &X509, issuer_cert: &X509) -> Result<bool> {
     // First, check the issuer
-    match issuer_cert.issued(&cert) {
+    match issuer_cert.issued(cert) {
         X509VerifyResult::OK => {} // valid issuer so pass through
         _ => {
             return Err(Error::VerificationError(
@@ -112,7 +112,7 @@ pub fn verify_x509_cert(cert: &X509, issuer_cert: &X509) -> Result<bool> {
     };
 
     // Then, check the signature
-    let issuer_pkey = get_x509_pubkey(&issuer_cert)?;
+    let issuer_pkey = get_x509_pubkey(issuer_cert)?;
 
     cert.verify(&issuer_pkey)
         .map_err(|e| Error::VerificationError(e.to_string()))
@@ -162,18 +162,18 @@ mod tests {
         let rsa = Rsa::generate(4096).unwrap();
         let pkey = PKey::from_rsa(rsa).unwrap();
         let privkey_der = &pkey.private_key_to_der().unwrap();
-        let privkey = &PKey::private_key_from_der(&privkey_der).unwrap();
+        let privkey = &PKey::private_key_from_der(privkey_der).unwrap();
         let pubkey_der = &pkey.public_key_to_der().unwrap();
-        let pubkey = &PKey::public_key_from_der(&pubkey_der).unwrap();
+        let pubkey = &PKey::public_key_from_der(pubkey_der).unwrap();
 
         let rsa2 = Rsa::generate(4096).unwrap();
         let pkey2 = PKey::from_rsa(rsa2).unwrap();
         let pubkey_der2 = &pkey2.public_key_to_der().unwrap();
-        let pubkey2 = &PKey::public_key_from_der(&pubkey_der2).unwrap();
+        let pubkey2 = &PKey::public_key_from_der(pubkey_der2).unwrap();
 
         TestCerts {
-            root: make_cert(&pubkey, &privkey),
-            interm: make_cert(&pubkey2, &privkey),
+            root: make_cert(pubkey, privkey),
+            interm: make_cert(pubkey2, privkey),
         }
     }
 

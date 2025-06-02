@@ -50,7 +50,7 @@ impl GcpTdxHost {
     /// Creates a new `GcpTdxHost` instance with the given guest MRTD.
     pub fn new(mrtd_bytes: &[u8; TDX_MR_REG_LEN]) -> GcpTdxHost {
         GcpTdxHost {
-            mrtd: mrtd_bytes.clone(),
+            mrtd: *mrtd_bytes,
         }
     }
 
@@ -69,7 +69,7 @@ impl GcpTdxHost {
             .arg("cat")
             .arg(storage_url)
             .output()
-            .map_err(|e| Error::IoError(e))?;
+            .map_err(Error::IoError)?;
 
         if !output.status.success() {
             return Err(Error::VerificationError(format!(
@@ -115,7 +115,7 @@ impl TeeHost for GcpTdxHost {
     /// This method performs the following steps:
     /// 1. Retrieves the TDX guest's launch endorsement from GCP storage.
     /// 2. Verifies the signing certificate of the endorsement against Google's
-    /// root cert.
+    ///    root cert.
     /// 3. Verifies the signature on the endorsement.
     /// 4. Compares the endorsed MRTD with the guest's MRTD.
     ///
@@ -123,9 +123,9 @@ impl TeeHost for GcpTdxHost {
     ///
     /// - `Error::IoError` if the endorsement cannot be retrieved.
     /// - `Error::ParseError` if the endorsement or golden measurement cannot be
-    /// parsed.
+    ///   parsed.
     /// - `Error::SignatureError` if the certificate or signature verification
-    /// fails.
+    ///   fails.
     ///
     /// # Note
     ///

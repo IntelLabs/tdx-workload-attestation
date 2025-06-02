@@ -37,7 +37,7 @@ use openssl::sign::Verifier;
 /// # Errors
 ///
 /// - `Error::SignatureError` if there are issues with the inputs, verifier
-/// setup, or configuration.
+///   setup, or configuration.
 /// - `Error::VerificationError` if the signature verification fails.
 ///
 /// # Notes
@@ -105,9 +105,9 @@ mod tests {
         let rsa = Rsa::generate(4096).unwrap();
         let pkey = PKey::from_rsa(rsa).unwrap();
         let privkey_der = &pkey.private_key_to_der().unwrap();
-        let privkey = &PKey::private_key_from_der(&privkey_der).unwrap();
+        let privkey = &PKey::private_key_from_der(privkey_der).unwrap();
         let pubkey_der = &pkey.public_key_to_der().unwrap();
-        let pubkey = &PKey::public_key_from_der(&pubkey_der).unwrap();
+        let pubkey = &PKey::public_key_from_der(pubkey_der).unwrap();
 
         TestKeys {
             privkey: privkey.clone(),

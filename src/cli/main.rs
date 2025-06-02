@@ -51,7 +51,7 @@ fn handle_not_supported(e: Error) -> Result<()> {
             println!("This platform does not support TDX 1.5!");
             Ok(())
         }
-        _ => return Err(e),
+        _ => Err(e),
     }
 }
 
@@ -87,14 +87,13 @@ fn main() -> Result<()> {
     let args = Cli::parse();
 
     // Handle commands
-    let result = match args.command {
+
+    match args.command {
         Commands::Platform { command } => platform::handle(command),
         Commands::Quote {
             mrtd_only,
             out_file,
             save,
         } => handle_quote(mrtd_only, out_file, save),
-    };
-
-    result
+    }
 }
