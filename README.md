@@ -67,7 +67,7 @@ tdx-attest platform is-tdx-available
 
 Print the VM's current Intel TDX attestation report:
 ```bash
-tdx-attest quote
+sudo tdx-attest quote
 ```
 To only print out the launch measurement (MRTD), run the `quote` command with
 the `-m` flag.
@@ -80,5 +80,3 @@ This library is experimental, and should not be used in a production environment
 
 [Intel Trust Domain Extensions]: https://www.intel.com/content/www/us/en/developer/tools/trust-domain-extensions/overview.html
 [enlightened Ubuntu]: https://github.com/canonical/tdx
-
-

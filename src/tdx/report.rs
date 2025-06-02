@@ -353,9 +353,7 @@ impl TdReportV15 {
     /// Creates a request for retrieving a TDX report from the CPU.
     pub fn create_request(report_data: &[u8; TDX_REPORT_DATA_LEN]) -> [u8; TDREPORT_REQ_LEN] {
         let mut req: [u8; TDREPORT_REQ_LEN] = [0; TDREPORT_REQ_LEN];
-        for i in 0..TDX_REPORT_DATA_LEN {
-            req[i] = report_data[i];
-        }
+        req[..TDX_REPORT_DATA_LEN].copy_from_slice(report_data);
 
         //println!("sending report request (len={}): {:?}", raw_req.len(), raw_req);
         req

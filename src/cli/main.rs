@@ -19,17 +19,24 @@ struct Cli {
 #[derive(Subcommand)]
 enum Commands {
     /// Platform-related commands
+    #[command(alias = "p")]
     Platform {
         #[command(subcommand)]
         command: platform::PlatformCommands,
     },
     /// Quote the TD, if available
+    #[command(alias = "q")]
     Quote {
         /// Only extract the static launch measurement (MRTD) from the quote (cannot be used with --out-file)
         #[arg(short, long = "launch-measurement", default_value = "false")]
         mrtd_only: bool,
         /// The filename to save the TD's quote (must be set with --save)
-        #[arg(short, long = "out-file", default_value = "")]
+        #[arg(
+            short,
+            long = "out-file",
+            default_value = "",
+            required_if_eq("save", "true")
+        )]
         out_file: String,
         /// Save the JSON-encoded TD quote to a file
         #[arg(short, long = "save", default_value = "false")]
@@ -59,11 +66,6 @@ fn handle_quote(mrtd_only: bool, out_file: String, save: bool) -> Result<()> {
             Err(e) => handle_not_supported(e),
         }
     } else {
-        if save && out_file.is_empty() {
-            return Err(Error::NotSupported(
-                "Output file cannot be empty when saving the TD quote".to_string(),
-            ));
-        }
         match provider.get_attestation_report() {
             Ok(report) => {
                 if save {
