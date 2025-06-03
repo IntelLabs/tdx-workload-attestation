@@ -7,8 +7,18 @@
 ![python-support](https://img.shields.io/badge/Python-3.12-3?logo=python)
 -->
 
-A Rust library for attesting virtual machine (VM) workloads using [Intel Trust
-Domain Extensions] (Intel TDX).
+A Rust library for generating attestations about virtual machine (VM) workloads
+using [Intel Trust Domain Extensions] (Intel TDX).
+
+## What is attestation?
+
+The purpose of this library is to serve as a building block for supply chain
+integrity of TDX workloads. Accordingly, "attestation" in this library refers
+to an **authenticated claim about any component of the TDX workload**, not to be
+confused with remote attestation from the trusted computing space.
+
+For more information about software attestations, we refer you to the
+[in-toto Attestation Framework](https://github.com/in-toto/attestation/blob/main/spec/README.md#in-toto-attestation-framework-spec).
 
 ## Quickstart
 
