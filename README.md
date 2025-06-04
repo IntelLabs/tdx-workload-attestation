@@ -1,11 +1,8 @@
 # TDX Workload Attestation
-![GitHub License](https://img.shields.io/github/license/IntelLabs/il-opensource-template)
-[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/IntelLabs/il-opensource-template/badge)](https://scorecard.dev/viewer/?uri=github.com/IntelLabs/il-opensource-template)
-<!-- UNCOMMENT AS NEEDED
-[![Unit Tests](https://github.com/IntelLabs/ConvAssist/actions/workflows/run_unittests.yaml/badge.svg?branch=covassist-cleanup)](https://github.com/IntelLabs/ConvAssist/actions/workflows/run_unittests.yaml)
-[![pytorch](https://img.shields.io/badge/PyTorch-v2.4.1-green?logo=pytorch)](https://pytorch.org/get-started/locally/)
-![python-support](https://img.shields.io/badge/Python-3.12-3?logo=python)
--->
+![GitHub License](https://img.shields.io/github/license/IntelLabs/tdx-workload-attestation)
+[![Crates.io](https://img.shields.io/crates/v/tdx-workload-attestation.svg)](https://crates.io/crates/tdx-workload-attestation)
+[![Documentation](https://docs.rs/tdx-workload-attestation/badge.svg)](https://docs.rs/tdx-workload-attestation)
+[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/IntelLabs/tdx-workload-attestation/badge)](https://scorecard.dev/viewer/?uri=github.com/IntelLabs/tdx-workload-attestation)
 
 A Rust library for generating attestations about virtual machine (VM) workloads
 using [Intel Trust Domain Extensions] (Intel TDX).
@@ -56,6 +53,19 @@ cargo build --features host-gcp-tdx
 The necessary root certificates are downloaded during this build.
 
 ### Use the library
+
+To import the TDX workload attestation library into your project, add it to your
+`Cargo.toml`:
+
+```toml
+[dependencies]
+tdx-workload-attestation = "0.1.0"
+```
+
+To disable TDX features, set `default-features = false`. To enable additional
+GCP-specific VM verification, add the `host-gcp-tdx` feature.
+
+### Test the library
 
 To test and showcase how the library can be used, we provide a simple
 `tdx-attest` CLI tool with the following commands.
