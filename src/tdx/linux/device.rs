@@ -11,8 +11,8 @@
 //!
 //! ## Example Usage
 //!
-//! ```rust
-//! use device::TdxDeviceKvm15;
+//! ```
+//! use tdx_workload_attestation::tdx::linux::device::TdxDeviceKvmV15;
 //!
 //! // Create a new instance of TdxDeviceKvmV15
 //! let tdx_device = TdxDeviceKvmV15::new();

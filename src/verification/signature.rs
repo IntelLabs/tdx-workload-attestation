@@ -7,18 +7,21 @@
 //!
 //! ## Example Usage
 //!
-//! ```rust
-//! use signature::verify_signature_sha256_rsa_pss;
-//! use x509::{load_x509_der, get_x509_pubkey};
+//! ```compile_fail
+//! use tdx_workload_attestation::verification::signature::verify_signature_sha256_rsa_pss;
+//! use tdx_workload_attestation::verification::x509::{load_x509_der, get_x509_pubkey};
 //!
 //! // Load signing cert
 //! let cert = load_x509_der("/path/to/cert.der")?;
-//! let signing_key = verification::x509::get_x509_pubkey(&cert)?;
+//! let signing_key = get_x509_pubkey(&cert)?;
 //!
-//! // Verify the digital `signature` on `data` with the `public_key` found in the cert
-//! match verify_signature_sha256_rsa_pss(data, &signature, &public_key) {
+//! // Get data and signature
+//!
+//! // Verify the digital `signature` on `data` with the `signing_key` found in the cert
+//! match verify_signature_sha256_rsa_pss(&data, &signature, &signing_key) {
 //!     Ok(true) => println!("Signature is valid."),
-//!     Err(e) => eprintln!("Signature verification failed: {}", e),
+//!     Ok(false) => println!("Signature is not valid."),
+//!     Err(e) => println!("Signature verification failed: {e}"),
 //! }
 //! ```
 

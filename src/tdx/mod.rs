@@ -9,9 +9,9 @@
 //!
 //! ## Example Usage
 //!
-//! ```rust
-//! use tdx::LinuxTdxProvider;
-//! use tdx::AttestationProvider;
+//! ```no_run
+//! use tdx_workload_attestation::tdx::LinuxTdxProvider;
+//! use tdx_workload_attestation::provider::AttestationProvider;
 //!
 //! let provider = LinuxTdxProvider::new();
 //!
@@ -83,9 +83,9 @@ impl AttestationProvider for LinuxTdxProvider {
     ///
     /// # Example
     ///
-    /// ```rust
-    /// use tdx::LinuxTdxProvider;
-    /// use tdx::AttestationProvider;
+    /// ```no_run
+    /// use tdx_workload_attestation::tdx::LinuxTdxProvider;
+    /// use tdx_workload_attestation::provider::AttestationProvider;
     ///
     /// let provider = LinuxTdxProvider::new();
     /// let report = provider.get_attestation_report().expect("Failed to get attestation report");
@@ -112,9 +112,9 @@ impl AttestationProvider for LinuxTdxProvider {
     ///
     /// # Example
     ///
-    /// ```rust
-    /// use tdx::LinuxTdxProvider;
-    /// use tdx::AttestationProvider;
+    /// ```no_run
+    /// use tdx_workload_attestation::tdx::LinuxTdxProvider;
+    /// use tdx_workload_attestation::provider::AttestationProvider;
     ///
     /// let provider = LinuxTdxProvider::new();
     /// let measurement = provider.get_launch_measurement().expect("Failed to get launch measurement");
