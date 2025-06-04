@@ -1,9 +1,12 @@
 [package]
 name = "tdx_workload_attestation"
+description = "A Rust library for generating attestations about virtual machine (VM) workloads using Intel Trust Domain Extensions (Intel TDX)."
 version = "0.1.0"
 edition = "2024"
 authors = ["Intel Corporation"]
 license = "Apache-2.0"
+repository = "https://github.com/IntelLabs/tdx-workload-attestation"
+readme = "README.md"
 
 [[bin]]
 name = "tdx-attest"

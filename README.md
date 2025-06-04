@@ -59,7 +59,7 @@ To import the TDX workload attestation library into your project, add it to your
 
 ```toml
 [dependencies]
-tdx-workload-attestation = "0.1.0"
+tdx_workload_attestation = "0.1.0"
 ```
 
 To disable TDX features, set `default-features = false`. To enable additional
