@@ -8,8 +8,8 @@
 //!
 //! ## Example Usage
 //!
-//! ```rust
-//! use x509::{load_x509_der, get_x509_pubkey, verify_x509_cert};
+//! ```no_run
+//! use tdx_workload_attestation::verification::x509::{load_x509_der, get_x509_pubkey, verify_x509_cert};
 //!
 //! // Load DER formatted certificate from file
 //! let cert = load_x509_der("path/to/certificate.der").expect("Failed to load certificate");
@@ -22,7 +22,8 @@
 //! let issuer_cert = load_x509_der("path/to/isser_certificate.der").expect("Failed to load issuer certificate");
 //! match verify_x509_cert(&cert, &issuer_cert) {
 //!     Ok(true) => println!("Certificate is valid."),
-//!     Err(e) => eprintln!("Certificate verification failed: {}", e),
+//!     Ok(false) => println!("Certificate is not valid."),
+//!     Err(e) => println!("Certificate verification failed: {e}"),
 //! }
 //! ```
 

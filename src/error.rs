@@ -12,8 +12,8 @@
 //!
 //! ## Example Usage
 //!
-//! ```rust
-//! use crate::error::{Error, Result};
+//! ```
+//! use tdx_workload_attestation::error::{Error, Result};
 //!
 //! fn example_function() -> Result<()> {
 //!     Err(Error::NotSupported("This operation is not supported".to_string()))

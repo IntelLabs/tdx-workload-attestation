@@ -17,28 +17,29 @@
 //!
 //! ## Example Usage
 //!
-//! ```rust
-//! use error::Error;
-//! use tdx::LinuxTdxProvider;
-//! use tdx::AttestationProvider;
+//! ```no_run
+//! use tdx_workload_attestation::tdx::LinuxTdxProvider;
+//! use tdx_workload_attestation::provider::AttestationProvider;
+//! use tdx_workload_attestation::get_platform_name;
 //!
 //! // Get the platform name
-//! let platform = get_platform_name();
+//! let platform = get_platform_name().unwrap();
 //!
 //! // Create a new provider instance
-//! match get_platform_name() {
+//! match platform.as_str() {
 //!     "tdx-linux" => {
-//!         provider = LinuxTdxProvider::new();
+//!         let provider = LinuxTdxProvider::new();
 //!
 //!         // Get the attestation report
-//!         let report = provider.get_attestation_report().expect("Failed to get attestation report");
+//!         let report = provider.get_attestation_report().unwrap();
 //!
 //!         // Get the launch measurement
-//!         let measurement = provider.get_launch_measurement().expect("Failed to get launch measurement");
+//!         let measurement = provider.get_launch_measurement().unwrap();
 //!
 //!         // Do something else
 //!     },
-//!     _ => Err(Error::NotSupported("This platform is not supported".to_string())),
+//!     // Can also throw an error here
+//!     _ => println!("This platform does not support TDX"),
 //! }
 //! ```
 

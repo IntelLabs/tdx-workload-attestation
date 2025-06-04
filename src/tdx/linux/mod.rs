@@ -5,8 +5,9 @@
 //! and parse the attestation report (`TDREPORT`) from the device.
 //!
 //! ## Example Usage
-//! ```rust
-//! use linux::{is_v15_kvm_device, get_tdreport_v15_kvm};
+//! ```no_run
+//! use tdx_workload_attestation::tdx::linux::{is_v15_kvm_device, get_tdreport_v15_kvm};
+//! use tdx_workload_attestation::tdx::TDX_REPORT_DATA_LEN;
 //!
 //! // Check if TDX 1.5 KVM device is available
 //! match is_v15_kvm_device() {
@@ -19,7 +20,7 @@
 //! let report_data: [u8; TDX_REPORT_DATA_LEN] = [0; TDX_REPORT_DATA_LEN];
 //!
 //! // Retrieve the TDREPORT
-//! let td_report = get_tdreport_v15_kvm(&report_data);
+//! let td_report = get_tdreport_v15_kvm(&report_data).unwrap();
 //!
 //! // Access fields from the parsed TDREPORT
 //! println!("MRTD: {:?}", td_report.get_mrtd());
@@ -33,7 +34,7 @@
 //! - The `is_v15_kvm_device` function may return an error if the device node is not accessible or valid.
 //! - The `get_tdreport_v15_kvm` function will panic if the device interaction fails (e.g., due to an invalid ioctl operation).
 
-mod device;
+pub mod device;
 
 use crate::error::Result;
 use crate::tdx::TDX_REPORT_DATA_LEN;

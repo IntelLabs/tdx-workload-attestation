@@ -10,8 +10,8 @@
 //! ## Example Usage
 //!
 //! ```rust
-//! use gcp::GcpTdxHost;
-//! use host::TeeHost;
+//! use tdx_workload_attestation::gcp::GcpTdxHost;
+//! use tdx_workload_attestation::host::TeeHost;
 //!
 //! // Example host interface setup with dummy TDX MRTD value
 //! let mrtd = [0u8; 48];
@@ -49,9 +49,7 @@ pub struct GcpTdxHost {
 impl GcpTdxHost {
     /// Creates a new `GcpTdxHost` instance with the given guest MRTD.
     pub fn new(mrtd_bytes: &[u8; TDX_MR_REG_LEN]) -> GcpTdxHost {
-        GcpTdxHost {
-            mrtd: *mrtd_bytes,
-        }
+        GcpTdxHost { mrtd: *mrtd_bytes }
     }
 
     fn retrieve_launch_endorsement(&self) -> Result<endorsement::VMLaunchEndorsement> {
