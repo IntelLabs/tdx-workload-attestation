@@ -18,7 +18,7 @@ yaml = []
 tdx-linux = ["dep:vmm-sys-util", "dep:serde-big-array"]
 host-verification = ["dep:openssl"]
 host-gcp-tdx = ["tdx-linux", "host-verification", "dep:protobuf"]
-workload-attestation = ["tdx-linux", "dep:tdx-guest"]
+workload-attestation = ["tdx-linux", "dep:tdx-guest", "dep:pagemap", "dep:x86_64"]
 
 [dependencies]
 clap = { version = "4.5.46", features = ["derive"] }
@@ -32,6 +32,8 @@ vmm-sys-util = { version = "0.15.0", optional = true }
 serde-big-array = { version = "0.5.1", optional = true }
 protobuf = {version = "3.7.2", optional = true }
 tdx-guest = { path = "../tdx-guest", version = "0.2.1", optional = true }
+pagemap = { version = "0.1.0", optional = true }
+x86_64 = { version = "0.15.2", default-features = false, optional = true }
 
 [build-dependencies]
 protobuf-codegen = { version = "3.7.2" }

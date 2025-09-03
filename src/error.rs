@@ -35,6 +35,8 @@ use thiserror::Error;
 /// - `NotSupported`: Represents an operation or feature that is not supported.
 /// - `ParseError`: Represents an error that occurs during parsing of serialized data.
 /// - `QuoteError`: Represents an error related to quote generation or processing.
+/// - `RtmrExtendError`: Represents an error related to RTMR extension.
+/// - `AddressError`: Represents an error related to addressing.
 /// - `SerializationError`: Represents an error that occurs during data serialization.
 /// - `SignatureError`: Represents an error related to cryptographic signature verification.
 /// - `VerificationError`: Represents a general verification error.
@@ -66,9 +68,15 @@ pub enum Error {
 
     /// Represents an error related to RTMR extension.
     ///
-    /// This variant includes a string describing the extend error.
+    /// This variant includes a string describing the RTMR extend error.
     #[error("RTMR extend error: {0}")]
     RtmrExtendError(String),
+
+    /// Represents an error related to addressing.
+    ///
+    /// This variant includes a string describing the addressing error.
+    #[error("Address error: {0}")]
+    AddressError(String),
 
     /// Represents an error that occurs during data serialization.
     ///
