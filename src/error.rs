@@ -64,6 +64,12 @@ pub enum Error {
     #[error("Quote error: {0}")]
     QuoteError(String),
 
+    /// Represents an error related to RTMR extension.
+    ///
+    /// This variant includes a string describing the extend error.
+    #[error("RTMR extend error: {0}")]
+    RtmrExtendError(String),
+
     /// Represents an error that occurs during data serialization.
     ///
     /// This variant includes a string describing the serialization error.

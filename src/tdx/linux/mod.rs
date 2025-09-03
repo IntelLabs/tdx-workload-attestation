@@ -35,6 +35,7 @@
 //! - The `get_tdreport_v15_kvm` function will panic if the device interaction fails (e.g., due to an invalid ioctl operation).
 
 pub mod device;
+#[cfg(feature = "workload-attestation")]
 pub mod rtmr;
 
 use crate::error::Result;
