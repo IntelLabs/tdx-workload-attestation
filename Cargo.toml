@@ -35,4 +35,4 @@ protobuf = {version = "3.7.2", optional = true }
 protobuf-codegen = { version = "3.7.2" }
 
 [dev-dependencies]
-rand = { version = "0.9.2" }
+rand = { version = "0.10.0" }
