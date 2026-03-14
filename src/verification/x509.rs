@@ -134,9 +134,7 @@ pub fn verify_x509_cert(cert: &X509, issuer_cert: &X509) -> Result<bool> {
     }
 
     if !in_validity_period {
-	return Err(Error::VerificationError(
-            "Cert not in validity period".to_string(),
-        ));
+	return Ok(false);
     }
 
     // Then, check the signature
@@ -227,8 +225,8 @@ mod tests {
             .unwrap();
         let x509_name = x509_name.build();
 
-        let now = Asn1Time::from_str("20241231235900.0").unwrap();
-        let end = Asn1Time::from_str("20251231235900.0").unwrap();
+        let now = Asn1Time::from_str("20241231235900Z").unwrap();
+        let end = Asn1Time::from_str("20251231235900Z").unwrap();
 
         let mut cert = openssl::x509::X509::builder().unwrap();
         cert.set_subject_name(&x509_name).unwrap();
@@ -293,7 +291,7 @@ mod tests {
 
     #[test]
     fn test_verify_x509_cert_invalid() -> Result<()> {
-        let mut test_certs = setup();
+        let test_certs = setup();
         assert!(
             !verify_x509_cert(&test_certs.invalid, &test_certs.root)
                 .expect("certificate signature should not be valid")
@@ -303,7 +301,7 @@ mod tests {
 
     #[test]
     fn test_verify_x509_cert_expired() -> Result<()> {
-        let mut test_certs = setup();
+        let test_certs = setup();
         assert!(
             !verify_x509_cert(&test_certs.expired, &test_certs.root)
                 .expect("certificate signature should be expired")
