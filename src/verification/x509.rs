@@ -28,6 +28,7 @@
 //! ```
 
 use crate::error::{Error, Result};
+use openssl::asn1::Asn1Time;
 use openssl::pkey::{PKey, Public};
 use openssl::x509::{X509, X509VerifyResult};
 use std::fs::File;
@@ -90,16 +91,18 @@ pub fn load_x509_der(cert_path: &str) -> Result<X509> {
     x509_from_der_bytes(&cert_bytes)
 }
 
-/// Verifies an X.509 certificate's signature.
+/// Verifies an X.509 certificate's signature and expiry.
 ///
-/// This function performs two checks to verify the validity of the certificate:
+/// This function performs three checks to verify the validity of the
+/// certificate:
 /// 1. It checks whether the provided `issuer_cert` is the issuer of the `cert`.
-/// 2. It verifies the signature of the `cert` using the public key from the
+/// 2. It checks that the `cert` is within the validity period and has not expired.
+/// 3. It verifies the signature of the `cert` using the public key from the
 ///    `issuer_cert`.
 ///
 /// # Errors
 ///
-/// - `Error::VerificationError` if the issuer verification fails.
+/// - `Error::VerificationError` if the issuer or validity verification fails.
 /// - `Error::SignatureError` if the signature verification fails.
 pub fn verify_x509_cert(cert: &X509, issuer_cert: &X509) -> Result<bool> {
     // First, check the issuer
@@ -111,6 +114,30 @@ pub fn verify_x509_cert(cert: &X509, issuer_cert: &X509) -> Result<bool> {
             ));
         }
     };
+
+    // Second, check the certificate's validity period
+    let mut in_validity_period = false;
+    let now = Asn1Time::days_from_now(0)
+	.map_err(|e| Error::OpenSslError(e))?;
+    let time_since_valid = now.compare(cert.not_before())
+	.map_err(|e| Error::OpenSslError(e))?;
+
+    if time_since_valid.is_ge() {
+	// only keep checking if the current time is later than the cert's not_before
+	let time_to_expiration = now.compare(cert.not_after())
+	    .map_err(|e| Error::OpenSslError(e))?;
+
+	if time_to_expiration.is_lt() {
+	    // if we get here, we are within the validity period of the cert
+	    in_validity_period = true;
+	}
+    }
+
+    if !in_validity_period {
+	return Err(Error::VerificationError(
+            "Cert not in validity period".to_string(),
+        ));
+    }
 
     // Then, check the signature
     let issuer_pkey = get_x509_pubkey(issuer_cert)?;
@@ -144,7 +171,7 @@ mod tests {
             .unwrap();
         let x509_name = x509_name.build();
 
-        let now = Asn1Time::days_from_now(0).unwrap();
+        let now = Asn1Time::days_from_now(-1).unwrap();
         let end = Asn1Time::days_from_now(5).unwrap();
 
         let mut cert = openssl::x509::X509::builder().unwrap();
@@ -202,6 +229,21 @@ mod tests {
         assert!(
             verify_x509_cert(&test_certs.interm, &test_certs.root)
                 .expect("certificate signature should be valid")
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn test_verify_x509_cert_expired() -> Result<()> {
+        let test_certs = setup();
+
+	let t1 = Asn1Time::days_from_now(-5).unwrap();
+        let t2 = Asn1Time::days_from_now(-2).unwrap();
+	test_certs.interm.set_not_before(&now).unwrap();
+        test_certs.interm.set_not_after(&end).unwrap();
+        assert!(
+            !verify_x509_cert(&test_certs.interm, &test_certs.root)
+                .expect("certificate signature should not be valid")
         );
         Ok(())
     }
