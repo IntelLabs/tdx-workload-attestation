@@ -157,6 +157,8 @@ mod tests {
     struct TestCerts {
         root: X509,
         interm: X509,
+	invalid: X509,
+	expired: X509,
     }
 
     fn make_cert(pubkey: &PKeyRef<Public>, sign_key: &PKeyRef<Private>) -> X509 {
@@ -171,8 +173,62 @@ mod tests {
             .unwrap();
         let x509_name = x509_name.build();
 
-        let now = Asn1Time::days_from_now(-1).unwrap();
+        let now = Asn1Time::days_from_now(0).unwrap();
         let end = Asn1Time::days_from_now(5).unwrap();
+
+        let mut cert = openssl::x509::X509::builder().unwrap();
+        cert.set_subject_name(&x509_name).unwrap();
+        cert.set_issuer_name(&x509_name).unwrap();
+        cert.set_not_before(&now).unwrap();
+        cert.set_not_after(&end).unwrap();
+
+        cert.set_pubkey(pubkey).unwrap();
+        cert.sign(sign_key, MessageDigest::sha256()).unwrap();
+
+        cert.build()
+    }
+
+    fn make_invalid_cert(pubkey: &PKeyRef<Public>, sign_key: &PKeyRef<Private>) -> X509 {
+        let mut x509_name = openssl::x509::X509NameBuilder::new().unwrap();
+        x509_name.append_entry_by_text("C", "US").unwrap();
+        x509_name.append_entry_by_text("ST", "CA").unwrap();
+        x509_name
+            .append_entry_by_text("O", "Some organization")
+            .unwrap();
+        x509_name
+            .append_entry_by_text("CN", "www.example.com")
+            .unwrap();
+        let x509_name = x509_name.build();
+
+        let now = Asn1Time::days_from_now(5).unwrap();
+        let end = Asn1Time::days_from_now(7).unwrap();
+
+        let mut cert = openssl::x509::X509::builder().unwrap();
+        cert.set_subject_name(&x509_name).unwrap();
+        cert.set_issuer_name(&x509_name).unwrap();
+        cert.set_not_before(&now).unwrap();
+        cert.set_not_after(&end).unwrap();
+
+        cert.set_pubkey(pubkey).unwrap();
+        cert.sign(sign_key, MessageDigest::sha256()).unwrap();
+
+        cert.build()
+    }
+
+    fn make_expired_cert(pubkey: &PKeyRef<Public>, sign_key: &PKeyRef<Private>) -> X509 {
+        let mut x509_name = openssl::x509::X509NameBuilder::new().unwrap();
+        x509_name.append_entry_by_text("C", "US").unwrap();
+        x509_name.append_entry_by_text("ST", "CA").unwrap();
+        x509_name
+            .append_entry_by_text("O", "Some organization")
+            .unwrap();
+        x509_name
+            .append_entry_by_text("CN", "www.example.com")
+            .unwrap();
+        let x509_name = x509_name.build();
+
+        let now = Asn1Time::from_str("20241231235900.0").unwrap();
+        let end = Asn1Time::from_str("20251231235900.0").unwrap();
 
         let mut cert = openssl::x509::X509::builder().unwrap();
         cert.set_subject_name(&x509_name).unwrap();
@@ -202,6 +258,8 @@ mod tests {
         TestCerts {
             root: make_cert(pubkey, privkey),
             interm: make_cert(pubkey2, privkey),
+	    invalid: make_invalid_cert(pubkey2, privkey),
+	    expired: make_expired_cert(pubkey2, privkey),
         }
     }
 
@@ -234,16 +292,21 @@ mod tests {
     }
 
     #[test]
-    fn test_verify_x509_cert_expired() -> Result<()> {
-        let test_certs = setup();
-
-	let t1 = Asn1Time::days_from_now(-5).unwrap();
-        let t2 = Asn1Time::days_from_now(-2).unwrap();
-	test_certs.interm.set_not_before(&now).unwrap();
-        test_certs.interm.set_not_after(&end).unwrap();
+    fn test_verify_x509_cert_invalid() -> Result<()> {
+        let mut test_certs = setup();
         assert!(
-            !verify_x509_cert(&test_certs.interm, &test_certs.root)
+            !verify_x509_cert(&test_certs.invalid, &test_certs.root)
                 .expect("certificate signature should not be valid")
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn test_verify_x509_cert_expired() -> Result<()> {
+        let mut test_certs = setup();
+        assert!(
+            !verify_x509_cert(&test_certs.expired, &test_certs.root)
+                .expect("certificate signature should be expired")
         );
         Ok(())
     }
