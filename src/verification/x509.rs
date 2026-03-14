@@ -117,24 +117,25 @@ pub fn verify_x509_cert(cert: &X509, issuer_cert: &X509) -> Result<bool> {
 
     // Second, check the certificate's validity period
     let mut in_validity_period = false;
-    let now = Asn1Time::days_from_now(0)
-	.map_err(|e| Error::OpenSslError(e))?;
-    let time_since_valid = now.compare(cert.not_before())
-	.map_err(|e| Error::OpenSslError(e))?;
+    let now = Asn1Time::days_from_now(0).map_err(|e| Error::OpenSslError(e))?;
+    let time_since_valid = now
+        .compare(cert.not_before())
+        .map_err(|e| Error::OpenSslError(e))?;
 
     if time_since_valid.is_ge() {
-	// only keep checking if the current time is later than the cert's not_before
-	let time_to_expiration = now.compare(cert.not_after())
-	    .map_err(|e| Error::OpenSslError(e))?;
+        // only keep checking if the current time is later than the cert's not_before
+        let time_to_expiration = now
+            .compare(cert.not_after())
+            .map_err(|e| Error::OpenSslError(e))?;
 
-	if time_to_expiration.is_lt() {
-	    // if we get here, we are within the validity period of the cert
-	    in_validity_period = true;
-	}
+        if time_to_expiration.is_lt() {
+            // if we get here, we are within the validity period of the cert
+            in_validity_period = true;
+        }
     }
 
     if !in_validity_period {
-	return Ok(false);
+        return Ok(false);
     }
 
     // Then, check the signature
@@ -155,8 +156,8 @@ mod tests {
     struct TestCerts {
         root: X509,
         interm: X509,
-	invalid: X509,
-	expired: X509,
+        invalid: X509,
+        expired: X509,
     }
 
     fn make_cert(pubkey: &PKeyRef<Public>, sign_key: &PKeyRef<Private>) -> X509 {
@@ -256,8 +257,8 @@ mod tests {
         TestCerts {
             root: make_cert(pubkey, privkey),
             interm: make_cert(pubkey2, privkey),
-	    invalid: make_invalid_cert(pubkey2, privkey),
-	    expired: make_expired_cert(pubkey2, privkey),
+            invalid: make_invalid_cert(pubkey2, privkey),
+            expired: make_expired_cert(pubkey2, privkey),
         }
     }
 
