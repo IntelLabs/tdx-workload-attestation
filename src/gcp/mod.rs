@@ -33,23 +33,33 @@ use crate::tdx::TDX_MR_REG_LEN;
 use crate::verification;
 
 use protobuf::Message;
+use reqwest;
 use std::fs;
 use std::process::Command;
-
-const GCE_TCB_ROOT_CERT_PATH: &str = "target/gcp/GCE-cc-tcb-root_1.crt";
 
 /// Represents a GCP TDX host.
 ///
 /// The `mrtd` field holds the MRTD (Measurement Register TD) obtained
 /// from an Intel TDX guest environment.
 pub struct GcpTdxHost {
+    tcb_root_cert: String,
     mrtd: [u8; TDX_MR_REG_LEN],
 }
 
 impl GcpTdxHost {
     /// Creates a new `GcpTdxHost` instance with the given guest MRTD.
-    pub fn new(mrtd_bytes: &[u8; TDX_MR_REG_LEN]) -> GcpTdxHost {
-        GcpTdxHost { mrtd: *mrtd_bytes }
+    pub fn new(mrtd_bytes: &[u8; TDX_MR_REG_LEN]) -> Result<GcpTdxHost> {
+	let root_cert_resp = reqwest::blocking::get("https://pki.goog/cloud_integrity/GCE-cc-tcb-root_1.crt")
+	    .map_err(|e| Error::IoError(e))?;
+	let root_cert = root_cert_resp.text()
+	    .map_err(|e| Error::IoError(e))?;
+
+        Ok(
+	    GcpTdxHost {
+		tcb_root_cert: root_cert,
+		mrtd: *mrtd_bytes,
+	    }
+	)
     }
 
     fn retrieve_launch_endorsement(&self) -> Result<endorsement::VMLaunchEndorsement> {
@@ -85,7 +95,7 @@ impl GcpTdxHost {
     fn verify_launch_endorsement_signing_cert(
         golden: &endorsement::VMGoldenMeasurement,
     ) -> Result<bool> {
-        let gcp_root_cert = verification::x509::load_x509_der(GCE_TCB_ROOT_CERT_PATH)?;
+        let gcp_root_cert = verification::x509::x509_from_der_bytes(&self.tcb_root_cert.as_bytes())?;
         let signing_cert = verification::x509::x509_from_der_bytes(&golden.cert)?;
 
         verification::x509::verify_x509_cert(&signing_cert, &gcp_root_cert)
