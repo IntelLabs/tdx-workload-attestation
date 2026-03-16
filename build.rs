@@ -1,7 +1,5 @@
 #[cfg(feature = "host-gcp-tdx")]
 use protobuf_codegen::{Codegen, Customize};
-#[cfg(feature = "host-gcp-tdx")]
-use std::process::Command;
 
 #[cfg(feature = "host-gcp-tdx")]
 fn generate_gcp_protos() {

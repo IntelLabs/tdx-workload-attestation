@@ -50,9 +50,9 @@ impl GcpTdxHost {
     /// Creates a new `GcpTdxHost` instance with the given guest MRTD.
     pub fn new(mrtd_bytes: &[u8; TDX_MR_REG_LEN]) -> Result<GcpTdxHost> {
 	let root_cert_resp = reqwest::blocking::get("https://pki.goog/cloud_integrity/GCE-cc-tcb-root_1.crt")
-	    .map_err(|e| Error::IoError(e))?;
+	    .map_err(|e| Error::NetworkError(e.without_url().to_string()))?;
 	let root_cert = root_cert_resp.text()
-	    .map_err(|e| Error::IoError(e))?;
+	    .map_err(|e| Error::NetworkError(e.without_url().to_string()))?;
 
         Ok(
 	    GcpTdxHost {
@@ -80,7 +80,7 @@ impl GcpTdxHost {
             .map_err(Error::IoError)?;
 
         if !output.status.success() {
-            return Err(Error::VerificationError(format!(
+            return Err(Error::NetworkError(format!(
                 "failed to retrieve GCP launch endorsement for TD verification: {}",
                 String::from_utf8_lossy(&output.stderr)
             )));
@@ -92,10 +92,10 @@ impl GcpTdxHost {
         Ok(endorsement)
     }
 
-    fn verify_launch_endorsement_signing_cert(
+    fn verify_launch_endorsement_signing_cert(&self,
         golden: &endorsement::VMGoldenMeasurement,
     ) -> Result<bool> {
-        let gcp_root_cert = verification::x509::x509_from_der_bytes(&self.tcb_root_cert.as_bytes())?;
+        let gcp_root_cert = verification::x509::x509_from_der_bytes(self.tcb_root_cert.as_bytes())?;
         let signing_cert = verification::x509::x509_from_der_bytes(&golden.cert)?;
 
         verification::x509::verify_x509_cert(&signing_cert, &gcp_root_cert)
