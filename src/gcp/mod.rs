@@ -48,6 +48,8 @@ pub struct GcpTdxHost {
 
 impl GcpTdxHost {
     /// Creates a new `GcpTdxHost` instance with the given guest MRTD.
+    ///
+    /// Returns `Error::NetworkError` if the GCE root cert cannot be dowloaded.
     pub fn new(mrtd_bytes: &[u8; TDX_MR_REG_LEN]) -> Result<GcpTdxHost> {
         let root_cert_resp =
             reqwest::blocking::get("https://pki.goog/cloud_integrity/GCE-cc-tcb-root_1.crt")
@@ -130,7 +132,7 @@ impl TeeHost for GcpTdxHost {
     ///
     /// # Errors
     ///
-    /// - `Error::IoError` if the endorsement cannot be retrieved.
+    /// - `Error::NetworkError` if the endorsement cannot be retrieved.
     /// - `Error::ParseError` if the endorsement or golden measurement cannot be
     ///   parsed.
     /// - `Error::SignatureError` if the certificate or signature verification
