@@ -46,7 +46,7 @@ enum Commands {
     },
     #[cfg(feature = "host-gcp-tdx")]
     /// Verify the TD, if available
-    #[command(alias = "v")]
+    #[command(alias = "V")]
     Verify {
         /// Only verify the static launch measurement (MRTD) of the TD
         #[arg(short, long = "verify-launch", default_value = "false")]

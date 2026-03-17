@@ -1,8 +1,10 @@
 #[cfg(feature = "host-gcp-tdx")]
 use protobuf_codegen::{Codegen, Customize};
-#[cfg(features = "host-gcp-tdx")]
+#[cfg(feature = "host-gcp-tdx")]
 use reqwest;
-#[cfg(features = "host-gcp-tdx")]
+#[cfg(feature = "host-gcp-tdx")]
+use std::fs;
+#[cfg(feature = "host-gcp-tdx")]
 use std::io::Write;
 
 #[cfg(feature = "host-gcp-tdx")]
@@ -12,7 +14,7 @@ fn generate_gcp_protos() {
     let endorsement_proto =
         reqwest::blocking::get("https://raw.githubusercontent.com/google/gce-tcb-verifier/refs/heads/main/proto/endorsement.proto").unwrap().text().unwrap();
 
-    let mut file = std::fs::File::create("target/gcp/endorsement.proto").unwrap();
+    let mut file = fs::File::create("target/gcp/endorsement.proto").unwrap();
     file.write_all(endorsement_proto.as_bytes()).unwrap();
 
     let no_mod_cfg = Customize::default();
