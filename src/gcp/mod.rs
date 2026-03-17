@@ -9,13 +9,13 @@
 //!
 //! ## Example Usage
 //!
-//! ```rust
+//! ```no_run
 //! use tdx_workload_attestation::gcp::GcpTdxHost;
 //! use tdx_workload_attestation::host::TeeHost;
 //!
 //! // Example host interface setup with dummy TDX MRTD value
 //! let mrtd = [0u8; 48];
-//! let host = GcpTdxHost::new(&mrtd);
+//! let host = GcpTdxHost::new(&mrtd).unwrap();
 //!
 //! // Verify a TDX guest's MRTD against the GCP host's launch endorsement
 //! match host.verify_launch_endorsement() {
