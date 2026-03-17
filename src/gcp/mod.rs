@@ -34,7 +34,7 @@ use crate::verification;
 
 use protobuf::Message;
 use reqwest;
-use std::fs;
+use std::path::PathBuf;
 use std::process::Command;
 
 /// Represents a GCP TDX host.
@@ -42,7 +42,7 @@ use std::process::Command;
 /// The `mrtd` field holds the MRTD (Measurement Register TD) obtained
 /// from an Intel TDX guest environment.
 pub struct GcpTdxHost {
-    tcb_root_cert: String,
+    tcb_root_cert: Vec<u8>,
     mrtd: [u8; TDX_MR_REG_LEN],
 }
 
@@ -55,18 +55,18 @@ impl GcpTdxHost {
             reqwest::blocking::get("https://pki.goog/cloud_integrity/GCE-cc-tcb-root_1.crt")
                 .map_err(|e| Error::NetworkError(e.without_url().to_string()))?;
         let root_cert = root_cert_resp
-            .text()
+            .bytes()
             .map_err(|e| Error::NetworkError(e.without_url().to_string()))?;
 
         Ok(GcpTdxHost {
-            tcb_root_cert: root_cert,
+            tcb_root_cert: root_cert.to_vec(),
             mrtd: *mrtd_bytes,
         })
     }
 
     fn retrieve_launch_endorsement(&self) -> Result<endorsement::VMLaunchEndorsement> {
         // Make sure the GCP CLI is installed
-        let gcloud_cli_path = fs::canonicalize("/usr/bin/gcloud")?;
+        let gcloud_cli_path = PathBuf::from("/snap/bin/gcloud");
 
         // Insert the MRTD as hex-encoded string into the URL to retrieve the endorsement
         let storage_url = format!(
@@ -98,7 +98,7 @@ impl GcpTdxHost {
         &self,
         golden: &endorsement::VMGoldenMeasurement,
     ) -> Result<bool> {
-        let gcp_root_cert = verification::x509::x509_from_der_bytes(self.tcb_root_cert.as_bytes())?;
+        let gcp_root_cert = verification::x509::x509_from_der_bytes(self.tcb_root_cert.as_slice())?;
         let signing_cert = verification::x509::x509_from_der_bytes(&golden.cert)?;
 
         verification::x509::verify_x509_cert(&signing_cert, &gcp_root_cert)
