@@ -1,5 +1,7 @@
 #[cfg(feature = "host-gcp-tdx")]
 use protobuf_codegen::{Codegen, Customize};
+#[cfg(feature = "host-gcp-tdx")]
+use std::fs;
 
 #[cfg(feature = "host-gcp-tdx")]
 fn generate_gcp_protos() {
@@ -16,6 +18,8 @@ fn generate_gcp_protos() {
 
 #[cfg(feature = "host-gcp-tdx")]
 fn setup_gcp_guest() {
+    fs::create_dir_all("target/gcp").unwrap();
+
     generate_gcp_protos();
 }
 
