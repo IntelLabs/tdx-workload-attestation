@@ -49,17 +49,17 @@ pub struct GcpTdxHost {
 impl GcpTdxHost {
     /// Creates a new `GcpTdxHost` instance with the given guest MRTD.
     pub fn new(mrtd_bytes: &[u8; TDX_MR_REG_LEN]) -> Result<GcpTdxHost> {
-	let root_cert_resp = reqwest::blocking::get("https://pki.goog/cloud_integrity/GCE-cc-tcb-root_1.crt")
-	    .map_err(|e| Error::NetworkError(e.without_url().to_string()))?;
-	let root_cert = root_cert_resp.text()
-	    .map_err(|e| Error::NetworkError(e.without_url().to_string()))?;
+        let root_cert_resp =
+            reqwest::blocking::get("https://pki.goog/cloud_integrity/GCE-cc-tcb-root_1.crt")
+                .map_err(|e| Error::NetworkError(e.without_url().to_string()))?;
+        let root_cert = root_cert_resp
+            .text()
+            .map_err(|e| Error::NetworkError(e.without_url().to_string()))?;
 
-        Ok(
-	    GcpTdxHost {
-		tcb_root_cert: root_cert,
-		mrtd: *mrtd_bytes,
-	    }
-	)
+        Ok(GcpTdxHost {
+            tcb_root_cert: root_cert,
+            mrtd: *mrtd_bytes,
+        })
     }
 
     fn retrieve_launch_endorsement(&self) -> Result<endorsement::VMLaunchEndorsement> {
@@ -92,7 +92,8 @@ impl GcpTdxHost {
         Ok(endorsement)
     }
 
-    fn verify_launch_endorsement_signing_cert(&self,
+    fn verify_launch_endorsement_signing_cert(
+        &self,
         golden: &endorsement::VMGoldenMeasurement,
     ) -> Result<bool> {
         let gcp_root_cert = verification::x509::x509_from_der_bytes(self.tcb_root_cert.as_bytes())?;
@@ -152,7 +153,7 @@ impl TeeHost for GcpTdxHost {
         .map_err(|e| Error::ParseError(e.to_string()))?;
 
         // Check signature on the endorsement
-        let valid_cert = GcpTdxHost::verify_launch_endorsement_signing_cert(&uefi_golden)?;
+        let valid_cert = self.verify_launch_endorsement_signing_cert(&uefi_golden)?;
 
         if !valid_cert {
             return Err(Error::SignatureError(
