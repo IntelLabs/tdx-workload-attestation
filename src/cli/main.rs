@@ -1,13 +1,13 @@
 use clap::{Parser, Subcommand};
 use std::fs::File;
 use std::io::Write;
-#[cfg(feature = "host-gcp-tdx")]
-use tdx_workload_attestation::gcp::GcpTdxHost;
 use tdx_workload_attestation::{
     error::{Error, Result},
     provider::AttestationProvider,
     tdx::LinuxTdxProvider,
 };
+#[cfg(feature = "host-gcp-tdx")]
+use tdx_workload_attestation::{gcp::GcpTdxHost, host::TeeHost};
 
 mod platform;
 
@@ -97,17 +97,24 @@ fn handle_verification(launch_only: bool) -> Result<()> {
     let provider = LinuxTdxProvider::new();
 
     if launch_only {
-        let mrtd = match provider.get_launch_measurement() {
-            Ok(mrtd) => mrtd,
-            Err(e) => handle_not_supported(e),
-        };
+        let mrtd = provider.get_launch_measurement()?;
 
         let gcp_host = GcpTdxHost::new(&mrtd)?;
-        gcp_host.verify_launch_endorsement()
+
+        let passed = gcp_host.verify_launch_endorsement()?;
+
+        if passed {
+            println!("TD launch measurement (MRTD) verification passed!");
+        } else {
+            println!(
+                "TD launch measurement (MRTD) verification failed: TD did not match GCP's endorsed measurement"
+            );
+        }
+        Ok(())
     } else {
         // TODO: implement workload attestation
         return Err(Error::NotSupported(
-            "Only TD launch measurement verification is currently supported on GCP",
+            "Only TD launch measurement verification is currently supported on GCP".to_string(),
         ));
     }
 }
