@@ -161,8 +161,8 @@ impl TeeHost for GcpTdxHost {
 
         // The endorsed MRTD will be within the golden value's TDX measurements structs
         if uefi_golden.tdx.is_none()
-            || uefi_golden.tdx.measurements.len() == 0
-            || uefi_golden.tdx.measurements[0].mrtd.len() == 0
+            || uefi_golden.tdx.measurements.is_empty()
+            || uefi_golden.tdx.measurements[0].mrtd.is_empty()
         {
             return Err(Error::ParseError(
                 "Expected TDX measurement structure missing".to_string(),
