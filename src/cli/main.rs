@@ -6,6 +6,8 @@ use tdx_workload_attestation::{
     provider::AttestationProvider,
     tdx::LinuxTdxProvider,
 };
+#[cfg(feature = "host-gcp-tdx")]
+use tdx_workload_attestation::{gcp::GcpTdxHost, host::TeeHost};
 
 mod platform;
 
@@ -41,6 +43,14 @@ enum Commands {
         /// Save the JSON-encoded TD quote to a file
         #[arg(short, long = "save", default_value = "false")]
         save: bool,
+    },
+    #[cfg(feature = "host-gcp-tdx")]
+    /// Verify the TD, if available
+    #[command(alias = "V")]
+    Verify {
+        /// Only verify the static launch measurement (MRTD) of the TD
+        #[arg(short, long = "verify-launch", default_value = "false")]
+        launch_only: bool,
     },
 }
 
@@ -82,6 +92,33 @@ fn handle_quote(mrtd_only: bool, out_file: String, save: bool) -> Result<()> {
     }
 }
 
+#[cfg(feature = "host-gcp-tdx")]
+fn handle_verification(launch_only: bool) -> Result<()> {
+    let provider = LinuxTdxProvider::new();
+
+    if launch_only {
+        let mrtd = provider.get_launch_measurement()?;
+
+        let gcp_host = GcpTdxHost::new(&mrtd)?;
+
+        let passed = gcp_host.verify_launch_endorsement()?;
+
+        if passed {
+            println!("TD launch measurement (MRTD) verification passed!");
+        } else {
+            println!(
+                "TD launch measurement (MRTD) verification failed: TD did not match GCP's endorsed measurement"
+            );
+        }
+        Ok(())
+    } else {
+        // TODO: implement workload attestation
+        return Err(Error::NotSupported(
+            "Only TD launch measurement verification is currently supported on GCP".to_string(),
+        ));
+    }
+}
+
 fn main() -> Result<()> {
     // Parse command line arguments
     let args = Cli::parse();
@@ -95,5 +132,7 @@ fn main() -> Result<()> {
             out_file,
             save,
         } => handle_quote(mrtd_only, out_file, save),
+        #[cfg(feature = "host-gcp-tdx")]
+        Commands::Verify { launch_only } => handle_verification(launch_only),
     }
 }

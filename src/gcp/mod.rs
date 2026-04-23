@@ -9,13 +9,13 @@
 //!
 //! ## Example Usage
 //!
-//! ```rust
+//! ```no_run
 //! use tdx_workload_attestation::gcp::GcpTdxHost;
 //! use tdx_workload_attestation::host::TeeHost;
 //!
 //! // Example host interface setup with dummy TDX MRTD value
 //! let mrtd = [0u8; 48];
-//! let host = GcpTdxHost::new(&mrtd);
+//! let host = GcpTdxHost::new(&mrtd).unwrap();
 //!
 //! // Verify a TDX guest's MRTD against the GCP host's launch endorsement
 //! match host.verify_launch_endorsement() {
@@ -33,28 +33,40 @@ use crate::tdx::TDX_MR_REG_LEN;
 use crate::verification;
 
 use protobuf::Message;
-use std::fs;
+use reqwest;
+use std::path::PathBuf;
 use std::process::Command;
-
-const GCE_TCB_ROOT_CERT_PATH: &str = "target/gcp/GCE-cc-tcb-root_1.crt";
 
 /// Represents a GCP TDX host.
 ///
 /// The `mrtd` field holds the MRTD (Measurement Register TD) obtained
 /// from an Intel TDX guest environment.
 pub struct GcpTdxHost {
+    tcb_root_cert: Vec<u8>,
     mrtd: [u8; TDX_MR_REG_LEN],
 }
 
 impl GcpTdxHost {
     /// Creates a new `GcpTdxHost` instance with the given guest MRTD.
-    pub fn new(mrtd_bytes: &[u8; TDX_MR_REG_LEN]) -> GcpTdxHost {
-        GcpTdxHost { mrtd: *mrtd_bytes }
+    ///
+    /// Returns `Error::NetworkError` if the GCE root cert cannot be dowloaded.
+    pub fn new(mrtd_bytes: &[u8; TDX_MR_REG_LEN]) -> Result<GcpTdxHost> {
+        let root_cert_resp =
+            reqwest::blocking::get("https://pki.goog/cloud_integrity/GCE-cc-tcb-root_1.crt")
+                .map_err(|e| Error::NetworkError(e.without_url().to_string()))?;
+        let root_cert = root_cert_resp
+            .bytes()
+            .map_err(|e| Error::NetworkError(e.without_url().to_string()))?;
+
+        Ok(GcpTdxHost {
+            tcb_root_cert: root_cert.to_vec(),
+            mrtd: *mrtd_bytes,
+        })
     }
 
     fn retrieve_launch_endorsement(&self) -> Result<endorsement::VMLaunchEndorsement> {
         // Make sure the GCP CLI is installed
-        let gcloud_cli_path = fs::canonicalize("/usr/bin/gcloud")?;
+        let gcloud_cli_path = PathBuf::from("/snap/bin/gcloud");
 
         // Insert the MRTD as hex-encoded string into the URL to retrieve the endorsement
         let storage_url = format!(
@@ -70,7 +82,7 @@ impl GcpTdxHost {
             .map_err(Error::IoError)?;
 
         if !output.status.success() {
-            return Err(Error::VerificationError(format!(
+            return Err(Error::NetworkError(format!(
                 "failed to retrieve GCP launch endorsement for TD verification: {}",
                 String::from_utf8_lossy(&output.stderr)
             )));
@@ -83,9 +95,10 @@ impl GcpTdxHost {
     }
 
     fn verify_launch_endorsement_signing_cert(
+        &self,
         golden: &endorsement::VMGoldenMeasurement,
     ) -> Result<bool> {
-        let gcp_root_cert = verification::x509::load_x509_der(GCE_TCB_ROOT_CERT_PATH)?;
+        let gcp_root_cert = verification::x509::x509_from_der_bytes(self.tcb_root_cert.as_slice())?;
         let signing_cert = verification::x509::x509_from_der_bytes(&golden.cert)?;
 
         verification::x509::verify_x509_cert(&signing_cert, &gcp_root_cert)
@@ -119,7 +132,7 @@ impl TeeHost for GcpTdxHost {
     ///
     /// # Errors
     ///
-    /// - `Error::IoError` if the endorsement cannot be retrieved.
+    /// - `Error::NetworkError` if the endorsement cannot be retrieved.
     /// - `Error::ParseError` if the endorsement or golden measurement cannot be
     ///   parsed.
     /// - `Error::SignatureError` if the certificate or signature verification
@@ -142,7 +155,7 @@ impl TeeHost for GcpTdxHost {
         .map_err(|e| Error::ParseError(e.to_string()))?;
 
         // Check signature on the endorsement
-        let valid_cert = GcpTdxHost::verify_launch_endorsement_signing_cert(&uefi_golden)?;
+        let valid_cert = self.verify_launch_endorsement_signing_cert(&uefi_golden)?;
 
         if !valid_cert {
             return Err(Error::SignatureError(
