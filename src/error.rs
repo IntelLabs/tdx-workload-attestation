@@ -52,6 +52,12 @@ pub enum Error {
     #[error("Not supported: {0}")]
     NotSupported(String),
 
+    /// Represents an OpenSSL error.
+    ///
+    /// This variant wraps a `openssl::error::ErrorStack` and provides additional context.
+    #[error("OpenSSL error: {0}")]
+    OpenSslError(#[from] openssl::error::ErrorStack),
+
     /// Represents an error that occurs during parsing of serialized data.
     ///
     /// This variant includes a string describing the parsing error.
