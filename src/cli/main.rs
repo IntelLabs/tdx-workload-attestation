@@ -41,6 +41,9 @@ enum Commands {
         /// Save the JSON-encoded TD quote to a file
         #[arg(short, long = "save", default_value = "false")]
         save: bool,
+        /// Hex-encoded data to bind into the TDX REPORTDATA field (max 64 bytes; shorter inputs are zero-padded)
+        #[arg(short = 'r', long = "report-data")]
+        report_data: Option<String>,
     },
 }
 
@@ -55,7 +58,12 @@ fn handle_not_supported(e: Error) -> Result<()> {
     }
 }
 
-fn handle_quote(mrtd_only: bool, out_file: String, save: bool) -> Result<()> {
+fn handle_quote(
+    mrtd_only: bool,
+    out_file: String,
+    save: bool,
+    report_data: Option<String>,
+) -> Result<()> {
     let provider = LinuxTdxProvider::new();
     if mrtd_only {
         match provider.get_launch_measurement() {
@@ -66,7 +74,15 @@ fn handle_quote(mrtd_only: bool, out_file: String, save: bool) -> Result<()> {
             Err(e) => handle_not_supported(e),
         }
     } else {
-        match provider.get_attestation_report() {
+        let result = match report_data {
+            Some(hex_str) => {
+                let bytes = hex::decode(hex_str.trim_start_matches("0x"))
+                    .map_err(|e| Error::ParseError(format!("invalid --report-data hex: {e}")))?;
+                provider.get_attestation_report_with_data(&bytes)
+            }
+            None => provider.get_attestation_report(),
+        };
+        match result {
             Ok(report) => {
                 if save {
                     let mut file = File::create(&out_file)?;
@@ -94,6 +110,7 @@ fn main() -> Result<()> {
             mrtd_only,
             out_file,
             save,
-        } => handle_quote(mrtd_only, out_file, save),
+            report_data,
+        } => handle_quote(mrtd_only, out_file, save, report_data),
     }
 }
