@@ -46,6 +46,12 @@ pub enum Error {
     #[error("IO error: {0}")]
     IoError(#[from] std::io::Error),
 
+    /// Represents an error related to network operations.
+    ///
+    /// This variant includes a string describing the network error.
+    #[error("Network error: {0}")]
+    NetworkError(String),
+
     /// Represents an operation or feature that is not supported.
     ///
     /// This variant includes a string describing the unsupported operation.
