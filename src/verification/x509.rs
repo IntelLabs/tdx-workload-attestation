@@ -117,10 +117,16 @@ pub fn verify_x509_cert(cert: &X509, issuer_cert: &X509) -> Result<bool> {
 
     // Second, check the certificate's validity period
     let now = Asn1Time::days_from_now(0).map_err(Error::OpenSslError)?;
-    if now.compare(cert.not_before()).map_err(Error::OpenSslError)?.is_lt()
-	|| now.compare(cert.not_after()).map_err(Error::OpenSslError)?.is_ge()
+    if now
+        .compare(cert.not_before())
+        .map_err(Error::OpenSslError)?
+        .is_lt()
+        || now
+            .compare(cert.not_after())
+            .map_err(Error::OpenSslError)?
+            .is_ge()
     {
-	return Ok(false);
+        return Ok(false);
     }
 
     // Then, check the signature
