@@ -66,7 +66,19 @@ impl GcpTdxHost {
 
     fn retrieve_launch_endorsement(&self) -> Result<endorsement::VMLaunchEndorsement> {
         // Make sure the GCP CLI is installed
-        let gcloud_cli_path = PathBuf::from("/snap/bin/gcloud");
+        let which_cmd = Command::new("which")
+            .arg("gcloud")
+            .output()
+            .expect("failed to execute which command");
+
+        if which_cmd.is_empty() {
+	    return Err(Error::NotSupported(
+                "gcloud command not found"
+	    ));
+        }
+
+        let gcloud_cli_path = PathBuf::from(String::from_utf8(which_cmd.stdout)
+					    .map_err(|e| Error::ParseError(e.to_string()))?);
 
         // Insert the MRTD as hex-encoded string into the URL to retrieve the endorsement
         let storage_url = format!(
