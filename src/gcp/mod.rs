@@ -71,14 +71,15 @@ impl GcpTdxHost {
             .output()
             .expect("failed to execute which command");
 
-        if which_cmd.is_empty() {
-	    return Err(Error::NotSupported(
-                "gcloud command not found"
-	    ));
+        if which_cmd.stdout.is_empty() {
+            return Err(Error::NotSupported("gcloud command not found".to_string()));
         }
 
-        let gcloud_cli_path = PathBuf::from(String::from_utf8(which_cmd.stdout)
-					    .map_err(|e| Error::ParseError(e.to_string()))?);
+        let gcloud_cli_path = PathBuf::from(
+            String::from_utf8(which_cmd.stdout)
+                .map_err(|e| Error::ParseError(e.to_string()))?
+                .trim_end_matches('\n'),
+        );
 
         // Insert the MRTD as hex-encoded string into the URL to retrieve the endorsement
         let storage_url = format!(
