@@ -116,26 +116,11 @@ pub fn verify_x509_cert(cert: &X509, issuer_cert: &X509) -> Result<bool> {
     };
 
     // Second, check the certificate's validity period
-    let mut in_validity_period = false;
-    let now = Asn1Time::days_from_now(0).map_err(|e| Error::OpenSslError(e))?;
-    let time_since_valid = now
-        .compare(cert.not_before())
-        .map_err(|e| Error::OpenSslError(e))?;
-
-    if time_since_valid.is_ge() {
-        // only keep checking if the current time is later than the cert's not_before
-        let time_to_expiration = now
-            .compare(cert.not_after())
-            .map_err(|e| Error::OpenSslError(e))?;
-
-        if time_to_expiration.is_lt() {
-            // if we get here, we are within the validity period of the cert
-            in_validity_period = true;
-        }
-    }
-
-    if !in_validity_period {
-        return Ok(false);
+    let now = Asn1Time::days_from_now(0).map_err(Error::OpenSslError)?;
+    if now.compare(cert.not_before()).map_err(Error::OpenSslError)?.is_lt()
+	|| now.compare(cert.not_after()).map_err(Error::OpenSslError)?.is_ge()
+    {
+	return Ok(false);
     }
 
     // Then, check the signature
