@@ -46,11 +46,23 @@ pub enum Error {
     #[error("IO error: {0}")]
     IoError(#[from] std::io::Error),
 
+    /// Represents an error related to network operations.
+    ///
+    /// This variant includes a string describing the network error.
+    #[error("Network error: {0}")]
+    NetworkError(String),
+
     /// Represents an operation or feature that is not supported.
     ///
     /// This variant includes a string describing the unsupported operation.
     #[error("Not supported: {0}")]
     NotSupported(String),
+
+    /// Represents an OpenSSL error.
+    ///
+    /// This variant wraps a `openssl::error::ErrorStack` and provides additional context.
+    #[error("OpenSSL error: {0}")]
+    OpenSslError(#[from] openssl::error::ErrorStack),
 
     /// Represents an error that occurs during parsing of serialized data.
     ///

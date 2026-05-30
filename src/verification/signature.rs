@@ -29,9 +29,7 @@ use crate::error::{Error, Result};
 
 use openssl::hash::MessageDigest;
 use openssl::pkey::{PKey, Public};
-#[cfg(feature = "host-gcp-tdx")]
 use openssl::rsa::Padding;
-#[cfg(feature = "host-gcp-tdx")]
 use openssl::sign::RsaPssSaltlen;
 use openssl::sign::Verifier;
 
@@ -48,7 +46,6 @@ use openssl::sign::Verifier;
 /// This function is only available when the `host-gcp-tdx` feature is enabled
 /// because Google Cloud Platform uses a SHA256 with RSA PSS padding signature
 /// scheme, so this is needed to verify GCP-signed data.
-#[cfg(feature = "host-gcp-tdx")]
 pub fn verify_signature_sha256_rsa_pss(
     data: &[u8],
     signature: &[u8],
