@@ -1,7 +1,7 @@
 # TDX Workload Attestation
 ![GitHub License](https://img.shields.io/github/license/IntelLabs/tdx-workload-attestation)
 [![Crates.io](https://img.shields.io/crates/v/tdx-workload-attestation.svg)](https://crates.io/crates/tdx-workload-attestation)
-[![Documentation](https://docs.rs/tdx-workload-attestation/badge.svg)](https://docs.rs/tdx-workload-attestation)
+[![Documentation](https://docs.rs/tdx-workload-attestation/badge.svg)](https://docs.rs/tdx_workload_attestation/latest/tdx_workload_attestation/)
 [![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/IntelLabs/tdx-workload-attestation/badge)](https://scorecard.dev/viewer/?uri=github.com/IntelLabs/tdx-workload-attestation)
 
 A Rust library for generating attestations about virtual machine (VM) workloads
@@ -59,7 +59,7 @@ To import the TDX workload attestation library into your project, add it to your
 
 ```toml
 [dependencies]
-tdx_workload_attestation = "0.1.0"
+tdx_workload_attestation = "0.2.0"
 ```
 
 To disable TDX features, set `default-features = false`. To enable additional
